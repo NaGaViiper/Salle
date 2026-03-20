@@ -1,0 +1,4543 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Système Thomas – Light Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #fafafa;
+      --bg2:       #ffffff;
+      --card:      #ffffff;
+      --surface:   #f4f4f5;
+      --surface2:  #e4e4e7;
+      --border:    #e5e7eb;
+      --border2:   #d1d5db;
+      --text:      #18181b;
+      --muted:     #71717a;
+      --muted2:    #52525b;
+      --violet:    #8b5cf6;
+      --violet2:   #6d28d9;
+      --violet-glow: rgba(139,92,246,0.1);
+      --emerald:   #059669;
+      --emerald-glow: rgba(5,150,105,0.08);
+      --amber:     #d97706;
+      --red:       #dc2626;
+      --radius:    12px;
+      --radius-sm: 8px;
+      --tr:        0.2s ease;
+      --sidebar-w: 220px;
+      --font-title: 'Barlow Condensed', sans-serif;
+      --font-body:  'DM Sans', sans-serif;
+      --font-mono:  'JetBrains Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 2px; }
+
+    /* ══════════════════════════════════════════
+       LAYOUT — SIDEBAR + CONTENT
+    ══════════════════════════════════════════ */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 200;
+      padding: 0 0 24px 0;
+    }
+
+    .sidebar-logo {
+      padding: 28px 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo-title {
+      font-family: var(--font-title);
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .sidebar-logo-title span { color: var(--violet); }
+    .sidebar-logo-sub {
+      font-size: 0.62rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 4px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--muted2);
+      font-size: 0.83rem;
+      font-weight: 500;
+      transition: all var(--tr);
+      position: relative;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      color: var(--text);
+      background: rgba(0,0,0,0.05);
+    }
+    .nav-item.active {
+      color: var(--violet);
+      background: var(--violet-glow);
+      border-color: rgba(139,92,246,0.15);
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 60%;
+      background: var(--violet);
+      border-radius: 0 2px 2px 0;
+    }
+    .nav-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .nav-label { flex: 1; }
+    .nav-badge {
+      background: var(--violet2);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 99px;
+      letter-spacing: 0.03em;
+    }
+    .nav-count {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: rgba(0,0,0,0.05);
+      padding: 2px 7px;
+      border-radius: 99px;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 12px;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    .view { display: none; padding: 32px 32px 48px; animation: fadeUp .25s ease; }
+    .view.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .page-title {
+      font-family: var(--font-title);
+      font-size: 2.4rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+    .page-title span { color: var(--violet); }
+    .page-sub {
+      font-size: 0.8rem;
+      color: var(--muted2);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ══════════════════════════════════════════
+       BUTTONS
+    ══════════════════════════════════════════ */
+    .btn {
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--tr);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--violet2), var(--violet));
+      color: #fff;
+      box-shadow: 0 0 20px rgba(139,92,246,0.25);
+    }
+    .btn-primary:hover { box-shadow: 0 0 28px rgba(139,92,246,0.40); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--text);
+    }
+    .btn-ghost:hover { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); }
+
+    .btn-success {
+      background: rgba(5,150,105,0.15);
+      border: 1px solid rgba(5,150,105,0.3);
+      color: var(--emerald);
+    }
+    .btn-success:hover { background: rgba(5,150,105,0.25); }
+
+    .btn-danger {
+      background: rgba(240,112,112,0.12);
+      border: 1px solid rgba(240,112,112,0.25);
+      color: var(--red);
+    }
+    .btn-danger:hover { background: rgba(240,112,112,0.22); }
+
+    .btn-sm { padding: 6px 12px; font-size: 0.76rem; }
+
+    /* ══════════════════════════════════════════
+       CARD BASE
+    ══════════════════════════════════════════ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color var(--tr), box-shadow var(--tr);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .card:hover {
+      border-color: var(--border2);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    }
+    .card-glow:hover {
+      box-shadow: 0 0 24px rgba(139,92,246,0.07);
+    }
+
+    /* ══════════════════════════════════════════
+       STATS STRIP
+    ══════════════════════════════════════════ */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--tr), box-shadow var(--tr);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .stat-card.violet::before { background: linear-gradient(90deg, var(--violet2), var(--violet)); }
+    .stat-card.emerald::before { background: var(--emerald); }
+    .stat-card.amber::before { background: var(--amber); }
+    .stat-card.red::before { background: var(--red); }
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 0.67rem;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+
+    /* ══════════════════════════════════════════
+       TRAINING TYPE CARDS
+    ══════════════════════════════════════════ */
+    .training-type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .training-type-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 14px;
+      cursor: pointer;
+      transition: all var(--tr);
+      text-align: center;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .training-type-card:hover {
+      border-color: rgba(139,92,246,0.25);
+      transform: translateY(-2px);
+      background: var(--surface);
+    }
+    .training-type-card.selected {
+      border-color: var(--violet);
+      background: var(--violet-glow);
+    }
+    .training-type-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px; right: 10px;
+      font-size: 0.7rem;
+      color: var(--violet);
+      font-weight: 800;
+    }
+    .training-type-icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .training-type-name {
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .training-type-desc { font-size: 0.67rem; color: var(--muted2); line-height: 1.4; }
+    .training-type-days {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 99px;
+      background: rgba(139,92,246,0.12);
+      color: var(--violet);
+      border: 1px solid rgba(139,92,246,0.15);
+    }
+    .training-type-changed-notice {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--violet-glow);
+      border: 1px solid rgba(139,92,246,0.20);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: var(--violet);
+      animation: fadeUp .22s ease;
+    }
+
+    /* ── DAYS CONFIG ── */
+    .days-config-section { margin-top: 22px; }
+    .days-config-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .days-chip {
+      padding: 7px 16px;
+      border-radius: 99px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--tr);
+      color: var(--muted2);
+      user-select: none;
+    }
+    .days-chip:hover { border-color: rgba(139,92,246,0.35); color: var(--text); }
+    .days-chip.active { border-color: var(--violet); background: var(--violet-glow); color: var(--violet); }
+    .days-config-hint { font-size: 0.73rem; color: var(--muted); margin-top: 8px; }
+
+    /* ── TRAINING DAYS ── */
+    .training-days-section { margin-top: 22px; }
+    .training-days-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .training-day-chip {
+      padding: 8px 14px;
+      border-radius: 99px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--tr);
+      color: var(--muted2);
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      min-width: 54px;
+      text-align: center;
+    }
+    .training-day-chip:hover { border-color: rgba(139,92,246,0.35); color: var(--text); }
+    .training-day-chip.active { border-color: var(--violet); background: var(--violet-glow); color: var(--violet); }
+    .training-day-chip .chip-label { font-size: 0.58rem; font-weight: 500; color: inherit; opacity: 0.7; }
+
+    /* ══════════════════════════════════════════
+       STRATEGY CONSOLE — 3-column layout
+    ══════════════════════════════════════════ */
+
+    /* Outer wrapper for the whole tab */
+    .strategy-console {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Top 3-column grid */
+    .console-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+
+    /* Each column = a "block" */
+    .console-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: visible;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .console-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .console-block.cb-goal::before   { background: linear-gradient(90deg, #8b5cf6, #6d28d9); }
+    .console-block.cb-struct::before { background: linear-gradient(90deg, #60a5fa, #38bdf8); }
+    .console-block.cb-freq::before   { background: linear-gradient(90deg, #059669, #10b981); }
+
+    /* Step badge */
+    .console-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.68rem; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .cb-goal   .step-num { background: rgba(139,92,246,0.15); color: var(--violet); border: 1px solid rgba(139,92,246,0.25); }
+    .cb-struct .step-num { background: rgba(96,165,250,0.15); color: #60a5fa;       border: 1px solid rgba(96,165,250,0.25); }
+    .cb-freq   .step-num { background: rgba(5,150,105,0.15); color: var(--emerald);border: 1px solid rgba(5,150,105,0.25); }
+
+    .step-title {
+      font-family: var(--font-title);
+      font-size: 0.82rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted2);
+    }
+    .step-sub {
+      font-size: 0.65rem; color: var(--muted); margin-top: 1px;
+    }
+
+    /* Deload row inside freq block */
+    .deload-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(240,165,0,0.06);
+      border: 1px solid rgba(240,165,0,0.15);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+    }
+    .deload-row-label {
+      font-size: 0.78rem; font-weight: 600; color: var(--amber);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .deload-row-sub { font-size: 0.62rem; color: var(--muted); margin-top: 1px; }
+
+    /* Volume block — full-width below the 3 cols */
+    .console-block-wide {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .console-block-wide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #f0a500, #f07070);
+    }
+
+    /* Inside console: goal cards go 1-col stacked */
+    .console-block .goal-grid { grid-template-columns: 1fr; gap: 6px; margin-top: 0; margin-bottom: 0; }
+    .console-block .goal-card { padding: 10px 12px 10px; text-align: left; display: flex; align-items: center; gap: 10px; }
+    .console-block .goal-card::after { top: 10px; right: 10px; }
+    .console-block .goal-icon { font-size: 1.2rem; margin-bottom: 0; flex-shrink: 0; }
+    .console-block .goal-name { font-size: 0.82rem; margin-bottom: 2px; }
+    .console-block .goal-desc { font-size: 0.6rem; }
+    .console-block .goal-tag  { margin-top: 0; font-size: 0.58rem; }
+    .console-block .goal-card-body { display: flex; flex-direction: column; flex: 1; }
+
+    /* Inside console: training-type grid 2-col */
+    .console-block .training-type-grid { grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 0; }
+    .console-block .training-type-card { padding: 10px 8px; }
+    .console-block .training-type-icon { font-size: 1.1rem; margin-bottom: 4px; }
+    .console-block .training-type-name { font-size: 0.75rem; margin-bottom: 2px; }
+    .console-block .training-type-desc { font-size: 0.6rem; }
+    .console-block .training-type-days { font-size: 0.6rem; margin-top: 5px; }
+
+    /* Days chips compact */
+    .console-block .days-config-grid   { gap: 5px; margin-top: 6px; }
+    .console-block .days-chip          { padding: 5px 10px; font-size: 0.72rem; }
+    .console-block .training-days-grid { gap: 5px; margin-top: 6px; }
+    .console-block .training-day-chip  { padding: 6px 8px; min-width: 42px; font-size: 0.72rem; }
+    .console-block .days-config-hint   { font-size: 0.65rem; margin-top: 6px; }
+    .console-block .training-type-changed-notice { font-size: 0.72rem; padding: 8px 10px; margin-top: 8px; }
+
+    /* Priority kanban board in wide block */
+    .console-block-wide .priority-board { padding-bottom: 0; }
+
+    @media (max-width: 1100px) {
+      .console-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .console-grid { grid-template-columns: 1fr; }
+      .console-block .training-type-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ══════════════════════════════════════════
+       GOAL SELECTOR — OBJECTIF DE LA PÉRIODE
+    ══════════════════════════════════════════ */ — OBJECTIF DE LA PÉRIODE
+    ══════════════════════════════════════════ */
+    .goal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+      margin-bottom: 4px;
+    }
+    .goal-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 14px 14px;
+      cursor: pointer;
+      transition: all var(--tr);
+      text-align: center;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    /* colour variables per goal */
+    .goal-card[data-goal="Force"]          { --gc: #60a5fa; --gg: rgba(96,165,250,0.11); }
+    .goal-card[data-goal="Prise de Masse"] { --gc: #8b5cf6; --gg: rgba(139,92,246,0.10); }
+    .goal-card[data-goal="Perte de Poids"] { --gc: #059669; --gg: rgba(5,150,105,0.11); }
+
+    .goal-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--gc);
+      border-radius: var(--radius) var(--radius) 0 0;
+      opacity: 0;
+      transition: opacity var(--tr);
+    }
+    .goal-card:hover          { border-color: var(--gc); background: var(--gg); transform: translateY(-2px); }
+    .goal-card.selected       { border-color: var(--gc); background: var(--gg); }
+    .goal-card.selected::before { opacity: 1; }
+    .goal-card.selected::after {
+      content: '✓';
+      position: absolute; top: 8px; right: 10px;
+      font-size: 0.68rem; font-weight: 800; color: var(--gc);
+    }
+    .goal-icon { font-size: 1.7rem; margin-bottom: 8px; line-height: 1; }
+    .goal-name {
+      font-family: var(--font-title);
+      font-size: 0.97rem; font-weight: 900;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--text); margin-bottom: 5px;
+      transition: color var(--tr);
+    }
+    .goal-card.selected .goal-name { color: var(--gc); }
+    .goal-desc { font-size: 0.66rem; color: var(--muted2); line-height: 1.45; }
+    .goal-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 9px; font-size: 0.62rem; font-weight: 700;
+      font-family: var(--font-mono);
+      padding: 3px 10px; border-radius: 99px;
+      background: rgba(0,0,0,0.05);
+      color: var(--muted2); border: 1px solid var(--border);
+      transition: all var(--tr);
+    }
+    .goal-card.selected .goal-tag { color: var(--gc); border-color: var(--gc); background: rgba(0,0,0,0.06); }
+
+    /* rest-time pill in suivi */
+    .rest-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 99px; border: 1px solid;
+      font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700;
+      animation: fadeUp .2s ease;
+    }
+    .rest-pill.rp-force  { background: rgba(96,165,250,0.1);  color: #60a5fa; border-color: rgba(96,165,250,0.3); }
+    .rest-pill.rp-masse  { background: rgba(139,92,246,0.10); color: var(--violet); border-color: rgba(139,92,246,0.25); }
+    .rest-pill.rp-cardio { background: rgba(5,150,105,0.1);  color: var(--emerald); border-color: rgba(5,150,105,0.3); }
+
+    @media (max-width: 600px) {
+      .goal-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── DELOAD BANNER ── */
+    .deload-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: rgba(240,165,0,0.06);
+      border: 1px solid rgba(240,165,0,0.2);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .deload-label {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--amber);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .deload-desc { font-size: 0.73rem; color: var(--muted2); margin-top: 3px; }
+    .deload-toggle { display: flex; align-items: center; gap: 10px; }
+    .toggle-switch { position: relative; width: 44px; height: 24px; cursor: pointer; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.06);
+      border-radius: 99px;
+      border: 1px solid var(--border2);
+      transition: all var(--tr);
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; top: 3px;
+      background: var(--muted2);
+      border-radius: 50%;
+      transition: all var(--tr);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: rgba(240,165,0,0.3); border-color: rgba(240,165,0,0.5); }
+    .toggle-switch input:checked + .toggle-slider::before { background: var(--amber); transform: translateX(20px); }
+    .toggle-label { font-size: 0.78rem; color: var(--muted2); font-weight: 600; cursor: pointer; }
+
+    /* ══════════════════════════════════════════
+       PRIORITY TABLE
+    ══════════════════════════════════════════ */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.85rem; }
+    thead tr { background: var(--surface); }
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      color: var(--muted2);
+      font-weight: 600;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-title);
+    }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,0.05); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(139,92,246,0.04); }
+
+    /* ── PRIORITY SELECT ── */
+    .prio-select {
+      appearance: none;
+      border: none;
+      outline: none;
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 4px 24px 4px 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--tr);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 7px center;
+    }
+    .prio-select:hover { opacity: 0.85; }
+    .prio-select.prio-Maintenance  { background-color: rgba(5,150,105,0.15); color: var(--emerald); border: 1px solid rgba(5,150,105,0.3); }
+    .prio-select.prio-Modérée      { background-color: rgba(240,165,0,0.12);  color: var(--amber);   border: 1px solid rgba(240,165,0,0.25); }
+    .prio-select.prio-Prioritaire  { background-color: rgba(139,92,246,0.12); color: var(--violet); border: 1px solid rgba(139,92,246,0.25); }
+    .prio-select.prio-Ne-fais-pas  { background-color: rgba(0,0,0,0.05); color: var(--muted); border: 1px solid var(--border); }
+    .prio-select option { background: var(--surface2); color: var(--text); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 5px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-family: var(--font-title);
+    }
+    .badge-maintenance { background: rgba(5,150,105,0.12); color: var(--emerald); border: 1px solid rgba(5,150,105,0.25); }
+    .badge-moderee     { background: rgba(240,165,0,0.12);  color: var(--amber);   border: 1px solid rgba(240,165,0,0.25); }
+    .badge-prioritaire { background: rgba(139,92,246,0.12); color: var(--violet); border: 1px solid rgba(139,92,246,0.20); }
+    .badge-nefaispas   { background: rgba(0,0,0,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ══════════════════════════════════════════
+       KANBAN / PRIORITY BOARD
+    ══════════════════════════════════════════ */
+    .kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 18px; }
+    .kanban-col {
+      min-width: 200px;
+      max-width: 220px;
+      flex-shrink: 0;
+      border-radius: var(--radius);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: visible;
+    }
+    .kanban-col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .kanban-col-name {
+      font-family: var(--font-title);
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .kanban-count {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: rgba(0,0,0,0.20);
+      background: rgba(0,0,0,0.05);
+      padding: 1px 7px;
+      border-radius: 99px;
+    }
+    .kanban-card {
+      background: rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: default;
+      transition: all var(--tr);
+      position: relative;
+    }
+    .kanban-card:hover {
+      background: rgba(0,0,0,0.07);
+      border-color: rgba(139,92,246,0.15);
+      transform: translateX(2px);
+    }
+    .kanban-card .sets-info { font-size: 0.68rem; color: var(--muted2); margin-top: 4px; font-family: var(--font-mono); }
+
+    .col-maintenance { background: rgba(5,150,105,0.04); border: 1px solid rgba(5,150,105,0.1); }
+    .col-moderee     { background: rgba(240,165,0,0.04);  border: 1px solid rgba(240,165,0,0.1); }
+    .col-prioritaire { background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.12); }
+    .col-nefaispas   { background: rgba(0,0,0,0.02); border: 1px solid var(--border); }
+
+    .col-name-maintenance { color: var(--emerald); }
+    .col-name-moderee     { color: var(--amber); }
+    .col-name-prioritaire { color: var(--violet); }
+    .col-name-nefaispas   { color: var(--muted); }
+
+    /* ── SWAP EXERCISE ── */
+    .kanban-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+    .kanban-card-name { flex: 1; }
+    .swap-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(0,0,0,0.12);
+      font-size: 0.78rem; padding: 0 2px; line-height: 1;
+      flex-shrink: 0; transition: color var(--tr); margin-top: 1px;
+    }
+    .swap-btn:hover { color: var(--violet); }
+    .swap-dropdown {
+      position: absolute;
+      z-index: 9000;
+      min-width: 180px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    }
+    .swap-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    .swap-option {
+      padding: 8px 12px; font-size: 0.78rem; cursor: pointer; color: var(--text);
+      transition: background var(--tr);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .swap-option:last-child { border-bottom: none; }
+    .swap-option:hover { background: var(--violet-glow); color: var(--violet); }
+    .swap-option.current { color: var(--muted); font-style: italic; cursor: default; }
+    .swap-option.current:hover { background: none; color: var(--muted); }
+
+    /* ══════════════════════════════════════════
+       CONTROLS ROW
+    ══════════════════════════════════════════ */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+    .controls label { font-size: 0.8rem; color: var(--muted2); font-weight: 500; }
+    select {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 8px 28px 8px 12px;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236868a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      outline: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    select:focus { border-color: rgba(139,92,246,0.35); box-shadow: 0 0 0 3px rgba(139,92,246,0.08); }
+
+    /* ══════════════════════════════════════════
+       EXERCISE MANAGEMENT
+    ══════════════════════════════════════════ */
+    .exo-mgmt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .exo-mgmt-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color var(--tr), box-shadow var(--tr);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .exo-mgmt-card:hover { border-color: var(--border2); box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
+    .exo-mgmt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .exo-mgmt-muscle {
+      font-family: var(--font-title);
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .exo-mgmt-count { font-size: 0.68rem; color: var(--muted2); font-weight: 500; font-family: var(--font-mono); }
+    .exo-mgmt-list { padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+    .exo-mgmt-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0,0,0,0.03);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      border: 1px solid transparent;
+      transition: all var(--tr);
+    }
+    .exo-mgmt-item:hover { background: rgba(0,0,0,0.06); border-color: var(--border); }
+    .exo-del-btn {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 0.85rem; line-height: 1; padding: 0 2px;
+      transition: color var(--tr); flex-shrink: 0;
+    }
+    .exo-del-btn:hover { color: var(--red); }
+    .exo-add-row {
+      display: flex; gap: 6px; padding: 8px 10px 10px;
+      border-top: 1px solid var(--border);
+    }
+    .exo-add-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 7px 10px;
+      font-family: var(--font-body); font-size: 0.8rem;
+      color: var(--text); outline: none;
+      transition: border-color var(--tr);
+    }
+    .exo-add-input:focus { border-color: rgba(139,92,246,0.35); }
+    .exo-add-input::placeholder { color: rgba(0,0,0,0.20); }
+    .exo-add-btn {
+      background: var(--violet2); color: #fff; border: none; border-radius: 6px;
+      padding: 7px 12px; font-family: var(--font-body); font-size: 0.78rem;
+      font-weight: 700; cursor: pointer; transition: all var(--tr);
+      white-space: nowrap;
+    }
+    .exo-add-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    /* ══════════════════════════════════════════
+       SUIVI TAB — SESSION TRACKING
+    ══════════════════════════════════════════ */
+    .session-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+    .session-timer-block {
+      background: var(--card);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 110px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .session-timer-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--violet2), var(--violet));
+    }
+    .session-timer {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--violet);
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+    .session-timer-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted2);
+      margin-top: 3px;
+      font-weight: 700;
+    }
+    .session-day-label {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Progress bar */
+    .prog-bar-wrap {
+      height: 4px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 2px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .prog-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--violet2), var(--emerald));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .prog-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--muted2);
+      margin-bottom: 6px;
+    }
+    .prog-label-row strong { color: var(--text); }
+
+    /* Circular progress for muscles */
+    .muscle-circle-progress {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .muscle-circle-progress svg { transform: rotate(-90deg); }
+    .muscle-circle-text {
+      position: absolute;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--violet);
+    }
+
+    /* Suivi Grid */
+    .suivi-grid { display: flex; flex-direction: column; gap: 12px; }
+    .suivi-muscle-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color var(--tr), box-shadow var(--tr);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .suivi-muscle-block:hover { border-color: var(--border2); box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
+    .suivi-muscle-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background var(--tr);
+    }
+    .suivi-muscle-header:hover { background: rgba(0,0,0,0.02); }
+    .suivi-muscle-header-left {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .suivi-muscle-name {
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .suivi-muscle-progress {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted2);
+    }
+
+    .suivi-exercises { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .suivi-exo-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color var(--tr);
+    }
+    .suivi-exo-row:hover { border-color: rgba(139,92,246,0.12); }
+    .suivi-exo-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* SET CHIPS */
+    .sets-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .set-chip {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(0,0,0,0.05);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      min-width: 78px;
+      cursor: pointer;
+      transition: all var(--tr);
+      user-select: none;
+    }
+    .set-chip:hover {
+      background: rgba(139,92,246,0.09);
+      border-color: rgba(139,92,246,0.20);
+    }
+    .set-chip.done {
+      background: rgba(5,150,105,0.1);
+      border-color: rgba(5,150,105,0.30);
+    }
+    .set-chip.done .set-chip-label { color: var(--emerald); }
+    .set-chip-label {
+      font-size: 0.6rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 4px;
+      font-weight: 700;
+      font-family: var(--font-title);
+    }
+    .set-chip-inputs { display: flex; gap: 4px; align-items: center; }
+    .set-chip input {
+      width: 40px; background: transparent; border: none; color: var(--text);
+      font-family: var(--font-mono); font-size: 0.82rem; font-weight: 600;
+      text-align: center; padding: 0; outline: none;
+    }
+    .set-chip input::placeholder { color: rgba(0,0,0,0.20); }
+    .set-chip-sep { font-size: 0.65rem; color: var(--muted); }
+    .set-check {
+      position: absolute; top: 5px; right: 6px;
+      font-size: 0.6rem; color: var(--emerald);
+      display: none;
+      animation: checkPop 0.2s ease;
+    }
+    .set-chip.done .set-check { display: block; }
+    @keyframes checkPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.3); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .suivi-note-input {
+      width: 100%; background: rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+      border-radius: 6px; padding: 7px 10px;
+      font-family: var(--font-body); font-size: 0.78rem;
+      color: var(--text); resize: none; height: 44px; outline: none;
+      transition: border-color var(--tr);
+    }
+    .suivi-note-input:focus { border-color: rgba(139,92,246,0.25); }
+    .suivi-note-input::placeholder { color: rgba(0,0,0,0.20); }
+
+    /* Global note */
+    .global-note-block {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px;
+    }
+    .global-note-label {
+      font-family: var(--font-title);
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted2); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .global-note-textarea {
+      width: 100%; background: rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+      border-radius: 7px; padding: 9px 12px;
+      font-family: var(--font-body); font-size: 0.83rem;
+      color: var(--text); resize: vertical; min-height: 68px;
+      outline: none; line-height: 1.5; transition: border-color var(--tr);
+    }
+    .global-note-textarea:focus { border-color: rgba(139,92,246,0.25); }
+    .global-note-textarea::placeholder { color: rgba(0,0,0,0.20); }
+
+    /* Finish banner */
+    .finish-banner {
+      text-align: center;
+      padding: 36px 24px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(139,92,246,0.07), rgba(5,150,105,0.06));
+      border: 1px solid rgba(139,92,246,0.15);
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .finish-banner h2 {
+      font-family: var(--font-title);
+      font-size: 2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--violet);
+      margin-bottom: 8px;
+    }
+    .finish-banner p { font-size: 0.85rem; color: var(--muted2); margin-bottom: 20px; }
+
+    /* ── RATTRAPAGE ── */
+    .rattrapage-btn {
+      background: none;
+      border: 1.5px solid rgba(240,165,0,0.25);
+      color: var(--amber);
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      cursor: pointer;
+      transition: all var(--tr);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .rattrapage-btn:hover { background: rgba(240,165,0,0.1); border-color: var(--amber); }
+    .rattrapage-btn.active { background: rgba(240,165,0,0.15); border-color: var(--amber); color: #f5c97f; }
+
+    .rattrapage-panel {
+      background: rgba(240,165,0,0.05);
+      border: 1px solid rgba(240,165,0,0.2);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      animation: fadeUp .22s ease;
+    }
+    .rattrapage-panel-title {
+      font-family: var(--font-title);
+      font-size: 0.88rem; font-weight: 800; color: var(--amber);
+      display: flex; align-items: center; gap: 8px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 14px;
+    }
+    .rattrapage-list { display: flex; flex-direction: column; gap: 8px; }
+    .rattrapage-item {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(0,0,0,0.05);
+      border-radius: var(--radius-sm); padding: 9px 12px; flex-wrap: wrap;
+      border: 1px solid var(--border);
+    }
+    .rattrapage-item-muscle { font-size: 0.82rem; font-weight: 700; flex: 1; min-width: 100px; }
+    .rattrapage-item-muscle span { font-size: 0.68rem; font-weight: 500; color: var(--muted2); margin-left: 6px; }
+    .rattrapage-day-select {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2);
+      border-radius: 6px; padding: 5px 22px 5px 9px;
+      font-family: var(--font-body); font-size: 0.73rem; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236868a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 6px center;
+    }
+    .rattrapage-remove-btn {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 0.9rem; padding: 2px 4px; border-radius: 4px;
+      transition: all var(--tr);
+    }
+    .rattrapage-remove-btn:hover { color: var(--red); background: rgba(240,112,112,0.1); }
+    .rattrapage-done-badge {
+      font-size: 0.65rem; font-weight: 700;
+      background: rgba(5,150,105,0.15); color: var(--emerald);
+      border-radius: 4px; padding: 2px 7px;
+      border: 1px solid rgba(5,150,105,0.25);
+    }
+    .rattrapage-empty { text-align: center; padding: 16px; color: var(--muted); font-size: 0.82rem; }
+
+    /* Rattrapage reminder */
+    .rattrapage-reminder {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: rgba(240,165,0,0.07);
+      border: 1px solid rgba(240,165,0,0.25);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 12px 32px 0;
+      animation: fadeUp .3s ease;
+      position: relative;
+    }
+    .rattrapage-reminder-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .rattrapage-reminder-body { flex: 1; }
+    .rattrapage-reminder-title { font-size: 0.88rem; font-weight: 700; color: var(--amber); font-family: var(--font-title); text-transform: uppercase; letter-spacing: 0.05em; }
+    .rattrapage-reminder-list { font-size: 0.78rem; color: var(--muted2); line-height: 1.7; margin-top: 4px; }
+    .rattrapage-reminder-list strong { color: #f5c97f; font-weight: 600; }
+    .rattrapage-reminder-close {
+      position: absolute; top: 10px; right: 12px;
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 0.85rem; padding: 2px 5px; border-radius: 4px;
+      transition: all var(--tr);
+    }
+    .rattrapage-reminder-close:hover { color: var(--text); background: rgba(0,0,0,0.06); }
+
+    /* Recovery Alerts */
+    .recovery-alert {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(240,112,112,0.07);
+      border: 1px solid rgba(240,112,112,0.2);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      font-size: 0.82rem;
+      animation: fadeUp .22s ease;
+    }
+    .recovery-alert-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .recovery-alert-body { display: flex; flex-direction: column; gap: 4px; }
+    .recovery-alert-title { font-weight: 700; color: var(--red); font-family: var(--font-title); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.04em; }
+    .recovery-alert-list { color: var(--muted2); font-size: 0.77rem; line-height: 1.6; }
+    .recovery-alert-list span { color: #f5c97f; font-weight: 600; }
+
+    /* ══════════════════════════════════════════
+       HISTORIQUE TAB
+    ══════════════════════════════════════════ */
+    .hist-empty { text-align: center; padding: 70px 20px; color: var(--muted); }
+    .hist-empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+    .hist-empty p { font-size: 0.85rem; margin-bottom: 18px; }
+
+    .hist-list { display: flex; flex-direction: column; gap: 10px; }
+    .hist-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color var(--tr), box-shadow var(--tr);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .hist-card:hover { border-color: var(--border2); box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+    .hist-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; cursor: pointer; user-select: none;
+      transition: background var(--tr);
+    }
+    .hist-card-header:hover { background: rgba(0,0,0,0.02); }
+    .hist-card-title { display: flex; flex-direction: column; gap: 4px; }
+    .hist-card-date {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .hist-card-meta {
+      font-size: 0.73rem; color: var(--muted2);
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .hist-card-meta span { display: flex; align-items: center; gap: 4px; }
+    .hist-arrow { font-size: 0.7rem; color: var(--muted); transition: transform var(--tr); }
+    .hist-card.open .hist-arrow { transform: rotate(180deg); }
+    .hist-delete-btn {
+      background: transparent; border: none; color: var(--muted);
+      cursor: pointer; font-size: 0.78rem; padding: 4px 8px;
+      border-radius: 5px; transition: all var(--tr);
+    }
+    .hist-delete-btn:hover { background: rgba(240,112,112,0.1); color: var(--red); }
+
+    .hist-detail { display: none; padding: 0 18px 16px; }
+    .hist-card.open .hist-detail { display: block; }
+    .hist-muscle-block { margin-bottom: 12px; }
+    .hist-muscle-name {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted2); margin-bottom: 5px;
+      font-family: var(--font-title);
+    }
+    .hist-exo-table { width: 100%; font-size: 0.78rem; border-collapse: collapse; }
+    .hist-exo-table td { padding: 4px 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .hist-exo-table tr:last-child td { border-bottom: none; }
+    .hist-exo-table .exo-name { font-weight: 600; }
+    .hist-exo-table .exo-set { color: var(--muted2); font-size: 0.7rem; font-family: var(--font-mono); }
+    .hist-exo-table .exo-done-badge {
+      display: inline-block;
+      background: rgba(5,150,105,0.12);
+      color: var(--emerald);
+      border-radius: 4px; padding: 1px 7px;
+      font-size: 0.65rem; font-weight: 700;
+      border: 1px solid rgba(5,150,105,0.2);
+    }
+
+    /* ══════════════════════════════════════════
+       GRAPHIQUES TAB
+    ══════════════════════════════════════════ */
+    .charts-layout { display: flex; flex-direction: column; gap: 20px; }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .chart-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; margin-bottom: 18px;
+    }
+    .chart-card-title {
+      font-family: var(--font-title);
+      font-size: 1rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .chart-card-title span { color: var(--violet); }
+    .chart-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .chart-select {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 6px 26px 6px 10px;
+      font-family: var(--font-body); font-size: 0.78rem;
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236868a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .chart-empty {
+      text-align: center; padding: 44px 20px; color: var(--muted); font-size: 0.84rem;
+    }
+    .chart-empty .chart-empty-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
+    .chart-canvas-wrap { position: relative; height: 240px; }
+    .chart-period-chips { display: flex; gap: 5px; }
+    .period-chip {
+      padding: 4px 12px; border-radius: 99px; font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; border: 1.5px solid var(--border); color: var(--muted2);
+      background: transparent; transition: all var(--tr); user-select: none;
+    }
+    .period-chip:hover { border-color: rgba(139,92,246,0.25); color: var(--text); }
+    .period-chip.active { border-color: var(--violet); color: var(--violet); background: var(--violet-glow); }
+
+    .chart-stats-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .chart-stat {
+      flex: 1; min-width: 90px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+    .chart-stat-val {
+      font-family: var(--font-mono);
+      font-size: 1.15rem; font-weight: 700; color: var(--violet);
+    }
+    .chart-stat-lbl { font-size: 0.65rem; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; font-weight: 700; font-family: var(--font-title); }
+
+    /* ══════════════════════════════════════════
+       DATA MANAGEMENT
+    ══════════════════════════════════════════ */
+    .data-mgmt-section {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px; margin-top: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .data-mgmt-title {
+      font-family: var(--font-title);
+      font-size: 0.95rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 6px;
+    }
+    .data-mgmt-desc { font-size: 0.76rem; color: var(--muted2); margin-bottom: 16px; line-height: 1.5; }
+    .data-mgmt-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .import-file-label {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: var(--radius-sm);
+      font-family: var(--font-body); font-size: 0.82rem;
+      font-weight: 600; cursor: pointer;
+      border: 1px solid var(--border2);
+      background: transparent; color: var(--text);
+      transition: all var(--tr);
+    }
+    .import-file-label:hover { background: rgba(0,0,0,0.05); }
+    #import-file-input { display: none; }
+    .import-success {
+      font-size: 0.76rem; color: var(--emerald); margin-top: 8px;
+      display: none; align-items: center; gap: 6px;
+    }
+
+    /* ══════════════════════════════════════════
+       BOTTOM NAV (MOBILE)
+    ══════════════════════════════════════════ */
+    .bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(250,250,250,0.97);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0,0,0,0.07);
+      z-index: 200;
+      padding: 6px 0 max(8px, env(safe-area-inset-bottom));
+    }
+    .bottom-nav-inner { display: flex; justify-content: space-around; align-items: flex-end; }
+    .bnav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 6px 10px; cursor: pointer; border-radius: var(--radius-sm);
+      color: var(--muted); font-size: 0.58rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      transition: all var(--tr);
+      position: relative; min-width: 50px;
+    }
+    .bnav-item .bnav-icon {
+      font-size: 1.2rem; line-height: 1;
+      transition: transform var(--tr);
+    }
+    .bnav-item.active { color: var(--violet); }
+    .bnav-item.active .bnav-icon { transform: translateY(-2px); }
+    .bnav-item::after {
+      content: '';
+      position: absolute;
+      bottom: -6px; left: 50%; transform: translateX(-50%);
+      width: 0; height: 2px;
+      background: var(--violet);
+      border-radius: 2px;
+      transition: width var(--tr);
+    }
+    .bnav-item.active::after { width: 20px; }
+    .bnav-dot {
+      position: absolute; top: 4px; right: 8px;
+      width: 6px; height: 6px;
+      background: var(--violet); border-radius: 50%;
+      display: none;
+      box-shadow: 0 0 6px rgba(139,92,246,0.45);
+    }
+    .bnav-item.has-badge .bnav-dot { display: block; }
+
+    /* ══════════════════════════════════════════
+       PRIORITY BOARD
+    ══════════════════════════════════════════ */
+    .priority-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 18px; }
+    .priority-col {
+      min-width: 200px; border-radius: var(--radius);
+      padding: 12px; display: flex; flex-direction: column; gap: 7px;
+    }
+    .priority-col-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .empty-state-icon { font-size: 2.5rem; opacity: 0.4; }
+    .empty-state p { font-size: 0.85rem; color: var(--muted2); max-width: 280px; line-height: 1.6; }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE — MOBILE
+    ══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; padding-bottom: 70px; }
+      .bottom-nav { display: block; }
+
+      .view { padding: 20px 16px 32px; }
+      .page-title { font-size: 1.8rem; }
+
+      .stats-strip { grid-template-columns: 1fr 1fr; }
+      .training-type-grid { grid-template-columns: 1fr 1fr; }
+
+      .set-chip { min-width: 82px; padding: 10px; }
+      .set-chip input { width: 40px; font-size: 0.85rem; }
+      .session-timer { font-size: 1.6rem; }
+
+      .exo-mgmt-grid { grid-template-columns: 1fr; }
+      .hist-card-meta { flex-direction: column; gap: 3px; }
+      .chart-card { padding: 14px; }
+      .chart-canvas-wrap { height: 200px; }
+      #session-board { flex-direction: column; }
+      #session-board .kanban-col { min-width: 0; max-width: 100%; width: 100%; }
+      .controls { gap: 8px; }
+      .data-mgmt-row { flex-direction: column; }
+    }
+
+    @media (max-width: 480px) {
+      .session-status-bar { gap: 10px; }
+      .stats-strip { gap: 8px; }
+      .kanban { gap: 8px; }
+      .kanban-col { min-width: 160px; }
+    }
+
+    /* ══════════════════════════════════════════
+       TOOLTIP SYSTEM — Onboarding helpers
+    ══════════════════════════════════════════ */
+    .tip-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(139,92,246,0.10);
+      border: 1px solid rgba(139,92,246,0.20);
+      color: var(--violet);
+      font-size: 0.6rem;
+      font-weight: 800;
+      cursor: help;
+      position: relative;
+      flex-shrink: 0;
+      transition: all var(--tr);
+      font-style: normal;
+      line-height: 1;
+      vertical-align: middle;
+      margin-left: 5px;
+      top: -1px;
+    }
+    .tip-icon:hover {
+      background: rgba(167,139,250,0.22);
+      border-color: rgba(139,92,246,0.45);
+      transform: scale(1.15);
+    }
+
+    .tip-bubble {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface2);
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 10px;
+      padding: 11px 14px;
+      width: 240px;
+      font-size: 0.76rem;
+      color: var(--text);
+      line-height: 1.55;
+      font-family: var(--font-body);
+      font-weight: 400;
+      z-index: 9999;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.09), 0 0 0 1px rgba(139,92,246,0.10);
+      pointer-events: none;
+      text-align: left;
+      white-space: normal;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .tip-bubble::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: rgba(139,92,246,0.25);
+    }
+    .tip-bubble::before {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--surface2);
+      z-index: 1;
+    }
+    .tip-icon:hover .tip-bubble,
+    .tip-icon:focus .tip-bubble {
+      display: block;
+      animation: tipFadeIn .18s ease;
+    }
+    @keyframes tipFadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    .tip-bubble strong { color: var(--violet); font-weight: 700; }
+    .tip-bubble .tip-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      margin-top: 4px;
+    }
+    .tip-bubble .tip-row:first-child { border-top: none; margin-top: 0; }
+    .tip-bubble .tip-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted2); min-width: 60px; }
+    .tip-bubble .tip-val { color: var(--text); font-family: var(--font-mono); font-size: 0.72rem; }
+
+    /* Bubble above the icon, aligned to the LEFT (right edge of bubble = right edge of icon) */
+    .tip-icon.tip-top-left .tip-bubble {
+      bottom: calc(100% + 10px);
+      left: auto;
+      right: 0;
+      transform: none;
+    }
+    .tip-icon.tip-top-left .tip-bubble::after,
+    .tip-icon.tip-top-left .tip-bubble::before {
+      left: auto;
+      right: 6px;
+      transform: none;
+    }
+    .tip-icon.tip-top-left:hover .tip-bubble,
+    .tip-icon.tip-top-left:focus .tip-bubble {
+      animation: tipFadeInTopLeft .18s ease;
+    }
+    @keyframes tipFadeInTopLeft {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tooltip anchored to right edge when near left side */
+    .tip-icon.tip-right .tip-bubble {
+      left: 0;
+      transform: translateX(0);
+    }
+    .tip-icon.tip-right .tip-bubble::after,
+    .tip-icon.tip-right .tip-bubble::before {
+      left: 14px;
+      transform: none;
+    }
+
+    /* Tooltip that opens downward (for containers with overflow:hidden) */
+    .tip-icon.tip-down .tip-bubble {
+      bottom: auto;
+      top: calc(100% + 10px);
+    }
+    .tip-icon.tip-down .tip-bubble::after {
+      top: auto;
+      bottom: 100%;
+      border-top-color: transparent;
+      border-bottom-color: rgba(139,92,246,0.25);
+    }
+    .tip-icon.tip-down .tip-bubble::before {
+      top: auto;
+      bottom: 100%;
+      border-top-color: transparent;
+      border-bottom-color: var(--surface2);
+    }
+    .tip-icon.tip-down:hover .tip-bubble,
+    .tip-icon.tip-down:focus .tip-bubble {
+      animation: tipFadeInDown .18s ease;
+    }
+    @keyframes tipFadeInDown {
+      from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* Tooltip opening downward (when near top of viewport or truncated above) */
+    .tip-icon.tip-down .tip-bubble {
+      bottom: auto;
+      top: calc(100% + 10px);
+    }
+    .tip-icon.tip-down .tip-bubble::after {
+      top: auto;
+      bottom: 100%;
+      border-top-color: transparent;
+      border-bottom-color: rgba(139,92,246,0.25);
+    }
+    .tip-icon.tip-down .tip-bubble::before {
+      top: auto;
+      bottom: 100%;
+      border-top-color: transparent;
+      border-bottom-color: var(--surface2);
+    }
+    .tip-icon.tip-down:hover .tip-bubble,
+    .tip-icon.tip-down:focus .tip-bubble {
+      animation: tipFadeInDown .18s ease;
+    }
+    @keyframes tipFadeInDown {
+      from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    .tip-icon.tip-right.tip-down .tip-bubble {
+      left: 0;
+      transform: translateX(0);
+    }
+    .tip-icon.tip-right.tip-down:hover .tip-bubble,
+    .tip-icon.tip-right.tip-down:focus .tip-bubble {
+      animation: tipFadeInDownRight .18s ease;
+    }
+    @keyframes tipFadeInDownRight {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════════════════
+       ACTIVITY HEATMAP — GitHub-style calendar
+    ══════════════════════════════════════════ */
+
+    .heatmap-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px 18px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .heatmap-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #059669, #8b5cf6);
+    }
+
+    .heatmap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .heatmap-title {
+      font-family: var(--font-title);
+      font-size: 1rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .heatmap-title span { color: var(--emerald); }
+
+    .heatmap-stats {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .heatmap-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .heatmap-stat-val {
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .heatmap-stat-lbl {
+      font-size: 0.6rem;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-weight: 700;
+      font-family: var(--font-title);
+    }
+
+    /* Year selector chips */
+    .heatmap-year-chips {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .heatmap-year-chip {
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      color: var(--muted2);
+      background: transparent;
+      transition: all var(--tr);
+      user-select: none;
+    }
+    .heatmap-year-chip:hover { border-color: rgba(5,150,105,0.4); color: var(--text); }
+    .heatmap-year-chip.active { border-color: var(--emerald); color: var(--emerald); background: rgba(5,150,105,0.1); }
+
+    /* Scrollable grid wrapper */
+    .heatmap-scroll {
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    /* The SVG itself is generated by JS — these classes style DOM elements */
+    .heatmap-grid-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .heatmap-month-labels {
+      display: flex;
+      margin-left: 28px;         /* space for weekday labels */
+      margin-bottom: 4px;
+      gap: 0;
+    }
+    .heatmap-month-label {
+      font-family: var(--font-title);
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    .heatmap-body {
+      display: flex;
+      gap: 0;
+    }
+    .heatmap-weekday-labels {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-right: 4px;
+      padding-top: 1px;
+    }
+    .heatmap-wd-label {
+      font-family: var(--font-title);
+      font-size: 0.57rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      height: 11px;
+      display: flex;
+      align-items: center;
+    }
+    /* Only show Mon / Wed / Fri / Sun */
+    .heatmap-wd-label:nth-child(2) { visibility: visible; }
+    .heatmap-wd-label:nth-child(1),
+    .heatmap-wd-label:nth-child(3),
+    .heatmap-wd-label:nth-child(4),
+    .heatmap-wd-label:nth-child(5),
+    .heatmap-wd-label:nth-child(6),
+    .heatmap-wd-label:nth-child(7) { visibility: hidden; }
+
+    .heatmap-columns {
+      display: flex;
+      gap: 2px;
+    }
+    .heatmap-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* Individual cells */
+    .hc {
+      width: 11px; height: 11px;
+      border-radius: 2px;
+      cursor: default;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+      flex-shrink: 0;
+    }
+    .hc:hover { transform: scale(1.35); z-index: 10; position: relative; }
+    .hc[data-count="0"]  { background: rgba(0,0,0,0.05); }
+    .hc[data-count="1"]  { background: rgba(5,150,105,0.25); }
+    .hc[data-count="2"]  { background: rgba(5,150,105,0.55); }
+    .hc[data-count="3+"] { background: rgba(5,150,105,0.85); box-shadow: 0 0 6px rgba(5,150,105,0.30); }
+
+    /* Tooltip */
+    .hc-tooltip {
+      position: fixed;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      color: var(--text);
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      opacity: 0;
+      transition: opacity 0.1s ease;
+    }
+    .hc-tooltip.visible { opacity: 1; }
+    .hc-tooltip strong { color: var(--emerald); }
+
+    /* Legend */
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+      justify-content: flex-end;
+    }
+    .heatmap-legend-label {
+      font-size: 0.63rem;
+      color: var(--muted);
+      font-family: var(--font-title);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .hlegend-cell {
+      width: 11px; height: 11px;
+      border-radius: 2px;
+    }
+    .hl0 { background: rgba(0,0,0,0.05); }
+    .hl1 { background: rgba(5,150,105,0.25); }
+    .hl2 { background: rgba(5,150,105,0.55); }
+    .hl3 { background: rgba(5,150,105,0.85); }
+
+
+    /* ── EXTERNAL LINKS SECTION ── */
+    .sidebar-external {
+      margin-top: auto;
+      padding: 14px 12px;
+      border-top: 1px solid var(--border);
+    }
+    .external-title {
+      font-size: 0.60rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      padding-left: 14px;
+    }
+    .external-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--muted2);
+      font-size: 0.77rem;
+      text-decoration: none;
+      transition: all var(--tr);
+    }
+    .external-link:hover {
+      background: rgba(139,92,246,0.08);
+      color: var(--violet);
+    }
+
+/* ══════════════════════════════════════════
+       REST TIMER OVERLAY
+    ══════════════════════════════════════════ */
+    #rest-timer-overlay {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      animation: rtSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #rest-timer-overlay.visible { display: flex; }
+
+    @keyframes rtSlideIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.88); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .rt-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.06);
+      padding: 20px 24px 16px;
+      min-width: 190px;
+      text-align: center;
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+    .rt-card.rt-ready {
+      border-color: var(--emerald);
+      box-shadow: 0 20px 60px rgba(5,150,105,0.18), 0 0 0 4px rgba(5,150,105,0.08);
+    }
+
+    .rt-label {
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .rt-label.rt-ready-label { color: var(--emerald); }
+
+    .rt-ring {
+      position: relative;
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 10px;
+    }
+    .rt-ring svg { transform: rotate(-90deg); }
+    .rt-ring-bg { fill: none; stroke: var(--surface2); stroke-width: 5; }
+    .rt-ring-fill {
+      fill: none;
+      stroke: var(--violet);
+      stroke-width: 5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
+    }
+    .rt-card.rt-ready .rt-ring-fill { stroke: var(--emerald); }
+
+    .rt-count {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      transition: color 0.4s ease;
+    }
+    .rt-card.rt-ready .rt-count { color: var(--emerald); }
+
+    .rt-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .rt-btn {
+      font-family: var(--font-body);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--muted2);
+      cursor: pointer;
+      transition: all var(--tr);
+    }
+    .rt-btn:hover { background: var(--surface2); color: var(--text); }
+    .rt-btn.rt-skip { border-color: transparent; background: transparent; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-tab="muscles" onclick="switchTab('muscles')">
+      <span class="nav-icon">🎯</span>
+      <span class="nav-label">Priorisation</span>
+    </div>
+    <div class="nav-item" data-tab="programme" onclick="switchTab('programme')">
+      <span class="nav-icon">💪</span>
+      <span class="nav-label">Exercices</span>
+    </div>
+    <div class="nav-item" data-tab="seances" onclick="switchTab('seances')">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Séances</span>
+    </div>
+    <div class="nav-item" data-tab="suivi" onclick="switchTab('suivi')">
+      <span class="nav-icon">▶</span>
+      <span class="nav-label">Suivi</span>
+      <span class="nav-badge" id="suivi-badge" style="display:none">LIVE</span>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="nav-item" data-tab="graphiques" onclick="switchTab('graphiques')">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">Graphiques</span>
+    </div>
+    <div class="nav-item" data-tab="historique" onclick="switchTab('historique')">
+      <span class="nav-icon">🕘</span>
+      <span class="nav-label">Historique</span>
+      <span class="nav-count" id="hist-badge">0</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-external">
+    <div class="external-title">Ressources</div>
+    <a href="https://musclewiki.com/fr-fr" target="_blank" class="external-link">
+      <span>📖</span> MuscleWiki
+    </a>
+    <a href="https://www.muscleandstrength.com/exercises" target="_blank" class="external-link">
+      <span>🏋️</span> M&amp;S Exercises
+    </a>
+    <a href="https://www.eatthismuch.com/" target="_blank" class="external-link">
+      <span>🥗</span> Eat This Much
+    </a>
+  </div>
+
+</aside>
+
+<!-- ══════════ MAIN CONTENT ══════════ -->
+<main class="main-content">
+
+<!-- RATTRAPAGE REMINDER -->
+<div id="rattrapage-reminder" style="display:none"></div>
+
+<!-- ═══ VIEW 1 – PRIORISATION ═══ -->
+<div class="view active" id="tab-muscles">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Console de <span>Stratégie</span></div>
+      <div class="page-sub">Ton plan d'entraînement de A à Z — en un coup d'œil</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleHelpModal()" title="Guide de démarrage" style="gap:6px">
+      <span style="font-size:0.9rem">💡</span> Aide
+    </button>
+  </div>
+
+  <!-- HELP MODAL -->
+  <div id="help-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.30);z-index:1000;backdrop-filter:blur(4px);animation:fadeUp .2s ease" onclick="closeHelpModal(event)">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface2);border:1px solid rgba(139,92,246,0.20);border-radius:16px;padding:28px 32px;width:min(520px,92vw);max-height:88vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.10)" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-family:var(--font-title);font-size:1.4rem;font-weight:900;text-transform:uppercase;letter-spacing:0.04em">Guide de <span style="color:var(--violet)">Démarrage</span></div>
+        <button onclick="closeHelpModal()" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:2px 6px;border-radius:6px;transition:all var(--tr)" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--muted)'">✕</button>
+      </div>
+
+      <div style="font-size:0.82rem;color:var(--muted2);margin-bottom:20px;line-height:1.6">
+        La <strong style="color:var(--text)">Console de Stratégie</strong> te guide en 4 étapes pour construire un plan d'entraînement personnalisé. Voici à quoi sert chaque bloc :
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+
+        <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(167,139,250,0.05);border:1px solid rgba(139,92,246,0.12);border-radius:10px;padding:14px">
+          <span style="font-family:var(--font-mono);font-size:1rem;font-weight:800;color:var(--violet);background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</span>
+          <div>
+            <div style="font-family:var(--font-title);font-size:0.88rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Objectif — Le <em>Pourquoi</em></div>
+            <div style="font-size:0.78rem;color:var(--muted2);line-height:1.55">Choisis ton objectif principal. Il détermine automatiquement le <strong style="color:var(--text)">nombre de reps</strong> et le <strong style="color:var(--text)">temps de repos</strong> de chaque série.<br><br>
+            <strong style="color:var(--violet)">Pourquoi 90 s pour la masse et 3 min pour la force ?</strong><br>
+            Les fibres musculaires d'endurance (masse) récupèrent en ~90 s. Les fibres rapides utilisées en force (charges très lourdes) mettent 2 à 4 minutes à regrouper leur phosphocréatine — un repos trop court = performance chutée et risque de blessure.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(5,150,105,0.04);border:1px solid rgba(5,150,105,0.12);border-radius:10px;padding:14px">
+          <span style="font-family:var(--font-mono);font-size:1rem;font-weight:800;color:var(--emerald);background:rgba(5,150,105,0.1);border:1px solid rgba(5,150,105,0.25);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</span>
+          <div>
+            <div style="font-family:var(--font-title);font-size:0.88rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Structure — Le <em>Comment</em></div>
+            <div style="font-size:0.78rem;color:var(--muted2);line-height:1.55">Choisis comment répartir tes muscles par séance. Pour 4 jours/semaine, le <strong style="color:var(--text)">Half Body ou Split</strong> sont souvent plus efficaces que le Full Body.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(240,165,0,0.04);border:1px solid rgba(240,165,0,0.12);border-radius:10px;padding:14px">
+          <span style="font-family:var(--font-mono);font-size:1rem;font-weight:800;color:var(--amber);background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.25);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</span>
+          <div>
+            <div style="font-family:var(--font-title);font-size:0.88rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Fréquence — Le <em>Quand</em></div>
+            <div style="font-size:0.78rem;color:var(--muted2);line-height:1.55">Sélectionne combien de jours par semaine tu t'entraînes et lesquels. Active le <strong style="color:var(--text)">Déload</strong> environ toutes les 4–6 semaines pour éviter le surentraînement.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(0,0,0,0.02);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <span style="font-family:var(--font-mono);font-size:1rem;font-weight:800;color:var(--muted2);background:rgba(0,0,0,0.06);border:1px solid var(--border2);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</span>
+          <div>
+            <div style="font-family:var(--font-title);font-size:0.88rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Volume par muscle — Le <em>Détail</em></div>
+            <div style="font-size:0.78rem;color:var(--muted2);line-height:1.55">Définis la priorité de chaque muscle. Met en <strong style="color:var(--violet)">Prioritaire</strong> tes points faibles (plus de séries), en <strong style="color:var(--emerald)">Maintenance</strong> ce qui est déjà développé, et en <strong style="color:var(--muted)">Ne fais pas</strong> ce que tu n'entraînes pas.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+        <button class="btn btn-primary" onclick="closeHelpModal()">Compris, c'est parti ! 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="strategy-console">
+
+    <!-- ── TOP 3 COLUMNS ── -->
+    <div class="console-grid">
+
+      <!-- BLOC 1 — OBJECTIF (Le "Pourquoi") -->
+      <div class="console-block cb-goal">
+        <div class="console-step">
+          <span class="step-num">1</span>
+          <div>
+            <div class="step-title">Objectif</div>
+            <div class="step-sub">Le « Pourquoi » — détermine reps &amp; repos
+              <i class="tip-icon" tabindex="0">?
+                <span class="tip-bubble">
+                  Ton objectif <strong>définit automatiquement</strong> le nombre de répétitions et le temps de repos entre chaque série.<br><br>
+                  <span class="tip-row"><span class="tip-label">Masse</span><span class="tip-val">8–12 rép · 90 s</span></span>
+                  <span class="tip-row"><span class="tip-label">Force</span><span class="tip-val">3–5 rép · 3 min</span></span>
+                  <span class="tip-row"><span class="tip-label">Poids</span><span class="tip-val">15–20 rép · 45 s</span></span>
+                </span>
+              </i>
+            </div>
+          </div>
+        </div>
+        <div class="goal-grid">
+          <div class="goal-card selected" data-goal="Prise de Masse" onclick="selectGoal('Prise de Masse')">
+            <div class="goal-icon">💪</div>
+            <div class="goal-card-body">
+              <div class="goal-name">Prise de Masse</div>
+              <div class="goal-desc">Hypertrophie — volume &amp; tensions mécaniques</div>
+              <span class="goal-tag" style="cursor:default" title="8 à 12 répétitions par série, 90 secondes de repos entre chaque. La zone d'hypertrophie optimale.">8–12 rép · 90 s ℹ</span>
+            </div>
+          </div>
+          <div class="goal-card" data-goal="Force" onclick="selectGoal('Force')">
+            <div class="goal-icon">🏋️</div>
+            <div class="goal-card-body">
+              <div class="goal-name">Force</div>
+              <div class="goal-desc">Charges lourdes — +1 série sur Prioritaires</div>
+              <span class="goal-tag" style="cursor:default" title="3 à 5 reps très lourdes, 3 min de repos. Le système nerveux a besoin de temps pour récupérer entre les efforts maximaux.">3–5 rép · 3 min ℹ</span>
+            </div>
+          </div>
+          <div class="goal-card" data-goal="Perte de Poids" onclick="selectGoal('Perte de Poids')">
+            <div class="goal-icon">🔥</div>
+            <div class="goal-card-body">
+              <div class="goal-name">Perte de Poids</div>
+              <div class="goal-desc">Haute densité — dépense calorique maximale</div>
+              <span class="goal-tag" style="cursor:default" title="15 à 20 reps légères, seulement 45 s de repos. Rythme élevé pour maximiser la dépense calorique et le EPOC.">15–20 rép · 45 s ℹ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOC 2 — TYPE D'ENTRAÎNEMENT (Le "Comment") -->
+      <div class="console-block cb-struct">
+        <div class="console-step">
+          <span class="step-num">2</span>
+          <div>
+            <div class="step-title">Structure</div>
+            <div class="step-sub">Le « Comment » — split &amp; organisation
+              <i class="tip-icon" tabindex="0">?
+                <span class="tip-bubble">
+                  Le <strong>split</strong> définit quels muscles tu travailles à chaque séance.<br><br>
+                  <span class="tip-row"><span class="tip-label">Full Body</span><span class="tip-val">Tout à chaque fois · 3j</span></span>
+                  <span class="tip-row"><span class="tip-label">Half Body</span><span class="tip-val">Haut/Bas alternés · 4j</span></span>
+                  <span class="tip-row"><span class="tip-label">Split</span><span class="tip-val">Muscle isolé · 4j+</span></span>
+                  <span class="tip-row"><span class="tip-label">PPL</span><span class="tip-val">Pousser/Tirer/Jambes · 6j</span></span>
+                </span>
+              </i>
+            </div>
+          </div>
+        </div>
+        <div class="training-type-grid">
+          <div class="training-type-card selected" data-type="FullBody" onclick="selectTrainingType('FullBody')">
+            <div class="training-type-icon">🏋️</div>
+            <div class="training-type-name">Full Body</div>
+            <div class="training-type-desc">Tous les muscles à chaque séance</div>
+            <span class="training-type-days">3 j / sem.</span>
+          </div>
+          <div class="training-type-card" data-type="HalfBody" onclick="selectTrainingType('HalfBody')">
+            <div class="training-type-icon">⚡</div>
+            <div class="training-type-name">Half Body</div>
+            <div class="training-type-desc">Haut / Bas en alternance</div>
+            <span class="training-type-days">4 j / sem.</span>
+          </div>
+          <div class="training-type-card" data-type="Split" onclick="selectTrainingType('Split')">
+            <div class="training-type-icon">🎯</div>
+            <div class="training-type-name">Split</div>
+            <div class="training-type-desc">Chaque muscle isolé</div>
+            <span class="training-type-days">4 j / sem.</span>
+          </div>
+          <div class="training-type-card" data-type="PPL" onclick="selectTrainingType('PPL')">
+            <div class="training-type-icon">🔄</div>
+            <div class="training-type-name">PPL</div>
+            <div class="training-type-desc">Push / Pull / Legs</div>
+            <span class="training-type-days">6 j / sem.</span>
+          </div>
+        </div>
+        <div id="training-type-notice" class="training-type-changed-notice" style="display:none">
+          ✓ <span id="training-type-notice-text"></span>
+        </div>
+      </div>
+
+      <!-- BLOC 3 — FRÉQUENCE (Le "Quand") -->
+      <div class="console-block cb-freq">
+        <div class="console-step">
+          <span class="step-num">3</span>
+          <div>
+            <div class="step-title">Fréquence</div>
+            <div class="step-sub">Le « Quand » — jours et rythme
+              <i class="tip-icon" tabindex="0">?
+                <span class="tip-bubble">
+                  Indique <strong>combien de fois</strong> tu t'entraînes par semaine et <strong>quels jours</strong>. L'app adapte ton plan en conséquence.<br><br>
+                  Un minimum de <strong>2 jours de repos</strong> par semaine est recommandé pour la récupération musculaire.
+                </span>
+              </i>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="days-config-hint" style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted2);margin-bottom:6px">Jours / semaine</div>
+          <div class="days-config-grid" id="days-config-grid"></div>
+          <div class="days-config-hint" id="days-config-hint"></div>
+        </div>
+
+        <div>
+          <div class="days-config-hint" style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted2);margin-bottom:6px">Mes jours d'entraînement</div>
+          <div class="training-days-grid" id="training-days-grid"></div>
+          <div class="days-config-hint" style="margin-top:6px" id="training-days-hint">Sélectionne tes jours habituels.</div>
+        </div>
+
+        <div class="deload-row">
+          <div>
+            <div class="deload-row-label">🔆 Semaine de déload
+              <i class="tip-icon tip-top-left" tabindex="0" style="margin-left:4px">?
+                <span class="tip-bubble">
+                  Le <strong>déload</strong> est une semaine allégée (volume –50 %) à planifier toutes les 4 à 6 semaines.<br><br>
+                  Il permet au corps de récupérer <strong>sans stopper l'entraînement</strong>, et prévient la stagnation et les blessures de surmenage.
+                </span>
+              </i>
+            </div>
+            <div class="deload-row-sub">Volume réduit à 50 % — récupération active</div>
+          </div>
+          <div class="deload-toggle">
+            <span class="toggle-label" id="deload-label-text">Off</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="deload-toggle" onchange="toggleDeload(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /console-grid -->
+
+    <!-- ── BLOC 4 — VOLUME PAR MUSCLE (full-width) ── -->
+    <div class="console-block-wide">
+      <div class="console-step" style="margin-bottom:14px">
+        <span class="step-num" style="background:rgba(240,165,0,0.15);color:var(--amber);border:1px solid rgba(240,165,0,0.3)">4</span>
+        <div>
+          <div class="step-title" style="font-family:var(--font-title);font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted2)">Volume par muscle</div>
+          <div class="step-sub" style="font-size:0.65rem;color:var(--muted);margin-top:1px">Le « Détail » — ajuste selon tes points faibles
+            <i class="tip-icon" tabindex="0">?
+              <span class="tip-bubble">
+                Définis quelle <strong>priorité</strong> tu accordes à chaque muscle.<br><br>
+                <span class="tip-row"><span class="tip-label" style="color:var(--violet)">Prioritaire</span><span class="tip-val">+1 série · focus max</span></span>
+                <span class="tip-row"><span class="tip-label" style="color:var(--amber)">Modérée</span><span class="tip-val">Volume standard</span></span>
+                <span class="tip-row"><span class="tip-label" style="color:var(--emerald)">Maintenance</span><span class="tip-val">Minimum pour garder</span></span>
+                <span class="tip-row"><span class="tip-label" style="color:var(--muted)">Ne fais pas</span><span class="tip-val">Exclu du plan</span></span>
+              </span>
+            </i>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Muscle</th><th>Séries cibles</th><th>Priorité</th></tr></thead>
+          <tbody id="priority-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-title" style="margin-top:22px">Vue par priorité</div>
+      <div class="priority-board" id="priority-board"></div>
+    </div>
+
+  </div><!-- /strategy-console -->
+</div>
+
+<!-- ═══ VIEW 2 – EXERCICES ═══ -->
+<div class="view" id="tab-programme">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Banque <span>d'Exercices</span></div>
+      <div class="page-sub">Personalise ta liste d'exercices par muscle</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="resetExercises()">↺ Réinitialiser</button>
+  </div>
+  <div class="exo-mgmt-grid" id="exo-mgmt-grid"></div>
+</div>
+
+<!-- ═══ VIEW 3 – SÉANCES ═══ -->
+<div class="view" id="tab-seances">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Mes <span>Séances</span></div>
+      <div class="page-sub">Plan d'entraînement de la semaine</div>
+    </div>
+  </div>
+  <div class="stats-strip" id="stats-strip"></div>
+  <div class="controls">
+    <label>Séance :</label>
+    <select id="day-select" onchange="renderSession()"></select>
+    <button class="btn btn-ghost btn-sm" onclick="generateNewPlan()">🔀 Nouveau plan</button>
+    <button class="btn btn-ghost btn-sm" onclick="renderSession()">↻ Actualiser</button>
+    <button class="btn btn-success" onclick="startSuivi()">▶ Démarrer</button>
+  </div>
+  <div id="session-board" class="kanban"></div>
+</div>
+
+<!-- ═══ VIEW 4 – SUIVI ═══ -->
+<div class="view" id="tab-suivi">
+  <div id="suivi-empty" class="empty-state">
+    <div class="empty-state-icon">⏸</div>
+    <p>Aucune séance en cours. Démarre une séance depuis l'onglet <strong>Séances</strong>.</p>
+    <button class="btn btn-primary" onclick="switchTab('seances')">Aller aux séances</button>
+  </div>
+
+  <div id="suivi-active" style="display:none">
+    <div class="page-header" style="margin-bottom:16px">
+      <div>
+        <div class="page-title" id="suivi-day-label">Séance</div>
+        <div class="page-sub">Session en cours</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-success" onclick="finishSession()">✓ Terminer</button>
+        <button class="btn btn-danger btn-sm" onclick="cancelSession()">✕ Annuler</button>
+      </div>
+    </div>
+
+    <div class="session-status-bar">
+      <div class="session-timer-block">
+        <div class="session-timer" id="suivi-timer">00:00</div>
+        <div class="session-timer-label">durée</div>
+      </div>
+      <div style="flex:1">
+        <div class="prog-label-row">
+          <span>Progression</span>
+          <strong id="suivi-progress-text">0 / 0 séries</strong>
+        </div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" id="suivi-progress-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div id="suivi-rest-pill" style="margin-bottom:12px"></div>
+
+    <div id="rattrapage-panel" style="display:none"></div>
+
+    <div class="global-note-block">
+      <div class="global-note-label">📝 Note de séance</div>
+      <textarea class="global-note-textarea" id="global-note-textarea"
+        placeholder="Ressenti général, fatigue, conditions du jour…"
+        onchange="if(activeSuivi) activeSuivi.globalNote = this.value"></textarea>
+    </div>
+
+    <div id="recovery-alerts"></div>
+    <div class="suivi-grid" id="suivi-grid"></div>
+  </div>
+
+  <div id="suivi-finish" style="display:none">
+    <div class="finish-banner">
+      <h2>🎉 Séance Terminée !</h2>
+      <p id="finish-summary-text">Tu as complété 0 séries en 00:00.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="switchTab('historique')">Voir l'historique</button>
+        <button class="btn btn-ghost" onclick="resetSuivi()">Nouvelle séance</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VIEW 5 – HISTORIQUE ═══ -->
+<div class="view" id="tab-historique">
+  <div class="page-header">
+    <div>
+      <div class="page-title"><span>Historique</span> des séances</div>
+      <div class="page-sub">Toutes tes performances enregistrées</div>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="clearHistory()" id="clear-hist-btn" style="display:none">🗑 Tout effacer</button>
+  </div>
+  <!-- ═══ ACTIVITY HEATMAP ═══ -->
+  <div class="heatmap-card" id="heatmap-card">
+    <div class="heatmap-header">
+      <div>
+        <div class="heatmap-title">Régularité <span>d'Entraînement</span></div>
+        <div style="font-size:0.72rem;color:var(--muted2);margin-top:3px">Chaque carré = 1 jour · Couleur = nombre de séances</div>
+      </div>
+      <div class="heatmap-stats" id="heatmap-stats"></div>
+    </div>
+    <div class="heatmap-year-chips" id="heatmap-year-chips"></div>
+    <div class="heatmap-scroll">
+      <div id="heatmap-grid"></div>
+    </div>
+    <div class="heatmap-legend">
+      <span class="heatmap-legend-label">Moins</span>
+      <div class="hlegend-cell hl0"></div>
+      <div class="hlegend-cell hl1"></div>
+      <div class="hlegend-cell hl2"></div>
+      <div class="hlegend-cell hl3"></div>
+      <span class="heatmap-legend-label">Plus</span>
+    </div>
+  </div>
+  <div id="hc-tooltip" class="hc-tooltip"></div>
+
+  <div id="hist-content"></div>
+
+  <div class="data-mgmt-section">
+    <div class="data-mgmt-title">💾 Sauvegarde & Restauration</div>
+    <div class="data-mgmt-desc">Exporte toutes tes données dans un fichier JSON. Importe-le pour restaurer sur un autre appareil.</div>
+    <div class="data-mgmt-row">
+      <button class="btn btn-primary" onclick="exportData()">⬇ Exporter</button>
+      <label class="import-file-label">
+        ⬆ Importer
+        <input type="file" id="import-file-input" accept=".json" onchange="importData(event)">
+      </label>
+      <button class="btn btn-ghost" onclick="copyDataToClipboard()">📋 Copier</button>
+    </div>
+    <div class="import-success" id="import-success">✓ Données importées avec succès !</div>
+  </div>
+  <div class="data-mgmt-section" style="margin-top:12px">
+    <div class="data-mgmt-title">📊 Statistiques de sauvegarde</div>
+    <div id="data-stats" style="font-size:0.8rem;color:var(--muted2);line-height:1.9;margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- ═══ VIEW 6 – GRAPHIQUES ═══ -->
+<div class="view" id="tab-graphiques">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Analyse <span>Performance</span></div>
+      <div class="page-sub">Visualise ta progression dans le temps</div>
+    </div>
+  </div>
+  <div class="charts-layout">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">📊 Volume <span>hebdomadaire</span></div>
+        <div class="chart-controls">
+          <select class="chart-select" id="muscle-chart-select" onchange="renderMuscleChart()"></select>
+          <div class="chart-period-chips" id="muscle-period-chips">
+            <div class="period-chip active" data-weeks="8"  onclick="setMusclePeriod(8)">8 sem.</div>
+            <div class="period-chip"        data-weeks="12" onclick="setMusclePeriod(12)">12 sem.</div>
+            <div class="period-chip"        data-weeks="0"  onclick="setMusclePeriod(0)">Tout</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="muscle-chart"></canvas></div>
+      <div class="chart-stats-row" id="muscle-chart-stats"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">🏋️ Progression <span>des charges</span></div>
+        <div class="chart-controls">
+          <select class="chart-select" id="exo-chart-select" onchange="renderExoChart()"></select>
+          <div class="chart-period-chips" id="exo-period-chips">
+            <div class="period-chip active" data-weeks="8"  onclick="setExoPeriod(8)">8 sem.</div>
+            <div class="period-chip"        data-weeks="12" onclick="setExoPeriod(12)">12 sem.</div>
+            <div class="period-chip"        data-weeks="0"  onclick="setExoPeriod(0)">Tout</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="exo-chart"></canvas></div>
+      <div class="chart-stats-row" id="exo-chart-stats"></div>
+    </div>
+  </div>
+</div>
+
+</main><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<!-- ══════════ BOTTOM NAV (mobile) ══════════ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <div class="bnav-item active" data-tab="muscles" onclick="switchTab('muscles')">
+      <span class="bnav-icon">🎯</span><span>Priorité</span>
+    </div>
+    <div class="bnav-item" data-tab="programme" onclick="switchTab('programme')">
+      <span class="bnav-icon">💪</span><span>Exos</span>
+    </div>
+    <div class="bnav-item" data-tab="seances" onclick="switchTab('seances')">
+      <span class="bnav-icon">📅</span><span>Séances</span>
+    </div>
+    <div class="bnav-item" data-tab="suivi" onclick="switchTab('suivi')">
+      <span class="bnav-icon">▶</span><span>Suivi</span>
+      <span class="bnav-dot" id="bnav-suivi-dot"></span>
+    </div>
+    <div class="bnav-item" data-tab="graphiques" onclick="switchTab('graphiques')">
+      <span class="bnav-icon">📈</span><span>Stats</span>
+    </div>
+    <div class="bnav-item" data-tab="historique" onclick="switchTab('historique')">
+      <span class="bnav-icon">🕘</span><span>Hist.</span>
+      <span class="bnav-dot" id="bnav-hist-dot"></span>
+    </div>
+  </div>
+</nav>
+
+<script>
+// ══════════════════════ DATA ══════════════════════
+const MUSCLES = [
+  { name:'Biceps',     priority:'Maintenance', series:'3–5 séries',  min:3,  max:5  },
+  { name:'Triceps',    priority:'Maintenance', series:'3–5 séries',  min:3,  max:5  },
+  { name:'Pectoraux',  priority:'Modérée',     series:'6–12 séries', min:6,  max:12 },
+  { name:'Quadriceps', priority:'Modérée',     series:'6–12 séries', min:6,  max:12 },
+  { name:'Dorsaux',    priority:'Modérée',     series:'6–12 séries', min:6,  max:12 },
+  { name:'Fessiers',   priority:'Modérée',     series:'6–12 séries', min:6,  max:12 },
+  { name:'Abs',        priority:'Maintenance', series:'3–5 séries',  min:3,  max:5  },
+  { name:'Ischios',    priority:'Prioritaire', series:'12+ séries',  min:12, max:16 },
+  { name:'Mollets',    priority:'Prioritaire', series:'12+ séries',  min:12, max:16 },
+  { name:'Epaules',    priority:'Prioritaire', series:'12+ séries',  min:12, max:16 },
+  { name:'Adducteurs', priority:'Prioritaire', series:'12+ séries',  min:12, max:16 },
+];
+
+let EXERCISES = {
+  Quadriceps:  ['Leg extension uni','Hack Squat (toes)','Toes presse à cuisse','Leg press bilatéral','Bulgarian split squat'],
+  Adducteurs:  ['Belted Sumo Squat','Leg press incline unilat','Adducteurs machine','Sumo deadlift','Copenhagen plank'],
+  Triceps:     ['Extension nuque','Pushdown triceps','Dips','Kickback câble','French press'],
+  Biceps:      ['Curl barre','Curl marteau','Curl câble','Curl concentré','Spider curl'],
+  Ischios:     ['Leg curl couché','Leg curl assis','SDTJT (roumain)','Nordic curl','Good morning'],
+  Mollets:     ['Extension mollets debout','Extension mollets assis','Extension mollets presse','Mollets unilatéral'],
+  Dorsaux:     ['Traction neutre','Tractions pronation','Rowing horizontal pronation','Pullover poulie','Rowing barre','Tirage vertical prise large'],
+  Epaules:     ['Rowing coudes ouverts','Développé militaire','Élévation latérale haltères','Élévation latérale poulie','Élévation postérieure','Élévation frontale','Face pull'],
+  Fessiers:    ['Deadlift traditionnel','Hip thrust','Soulevé de terre SUMO','RDL haltères','Abduction machine'],
+  Pectoraux:   ['Chest Press unilatéral','Écarté haltères','Fly poulie','Développé incliné','Pompes lestées','Développé couché haltères'],
+  Abs:         ['Crunch câble','Relevé de jambes','Planche','Ab wheel','Russian twist lesté','Crunch obliques'],
+};
+const EXERCISES_DEFAULT = JSON.parse(JSON.stringify(EXERCISES));
+
+// ══════════════════════ TRAINING TYPES ══════════════════════
+const TRAINING_TYPES = {
+  FullBody: {
+    label: 'Full Body',
+    days: [
+      { label:'Séance A', muscles:['Quadriceps','Fessiers','Ischios','Dorsaux','Pectoraux','Epaules','Biceps','Triceps','Abs'] },
+      { label:'Séance B', muscles:['Quadriceps','Adducteurs','Mollets','Dorsaux','Pectoraux','Epaules','Biceps','Triceps','Abs'] },
+      { label:'Séance C', muscles:['Quadriceps','Fessiers','Ischios','Adducteurs','Mollets','Dorsaux','Pectoraux','Epaules','Abs'] },
+    ]
+  },
+  HalfBody: {
+    label: 'Half Body',
+    days: [
+      { label:'Haut A', muscles:['Pectoraux','Dorsaux','Epaules','Biceps','Triceps','Abs'] },
+      { label:'Bas A',  muscles:['Quadriceps','Ischios','Fessiers','Adducteurs','Mollets','Abs'] },
+      { label:'Haut B', muscles:['Dorsaux','Pectoraux','Epaules','Biceps','Triceps','Abs'] },
+      { label:'Bas B',  muscles:['Quadriceps','Fessiers','Ischios','Adducteurs','Mollets','Abs'] },
+    ]
+  },
+  Split: {
+    label: 'Split Routine',
+    days: [
+      { label:'Jambes',    muscles:['Quadriceps','Ischios','Fessiers','Adducteurs','Mollets'] },
+      { label:'Poussée',   muscles:['Pectoraux','Epaules','Triceps','Abs'] },
+      { label:'Traction',  muscles:['Dorsaux','Biceps','Abs'] },
+      { label:'Complet',   muscles:['Quadriceps','Fessiers','Mollets','Pectoraux','Dorsaux','Epaules','Abs'] },
+    ]
+  },
+  PPL: {
+    label: 'Push / Pull / Legs',
+    days: [
+      { label:'Push A',  muscles:['Pectoraux','Epaules','Triceps','Abs'] },
+      { label:'Pull A',  muscles:['Dorsaux','Biceps','Abs'] },
+      { label:'Legs A',  muscles:['Quadriceps','Ischios','Fessiers','Adducteurs','Mollets'] },
+      { label:'Push B',  muscles:['Pectoraux','Epaules','Triceps','Abs'] },
+      { label:'Pull B',  muscles:['Dorsaux','Biceps','Adducteurs','Abs'] },
+      { label:'Legs B',  muscles:['Quadriceps','Ischios','Fessiers','Mollets','Abs'] },
+    ]
+  },
+};
+
+let currentTrainingType = 'FullBody';
+let DAYS = [...TRAINING_TYPES[currentTrainingType].days];
+
+function selectTrainingType(type) {
+  if (currentTrainingType === type) return;
+  currentTrainingType = type;
+  DAYS = [...TRAINING_TYPES[type].days];
+  activeDaysCount = null;
+  document.querySelectorAll('.training-type-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.type === type);
+  });
+  const notice = document.getElementById('training-type-notice');
+  const noticeText = document.getElementById('training-type-notice-text');
+  const t = TRAINING_TYPES[type];
+  noticeText.textContent = `Mode ${t.label} activé — ${t.days.length} séances générées.`;
+  notice.style.display = 'flex';
+  setTimeout(() => { notice.style.display = 'none'; }, 3000);
+  localStorage.setItem('thomas_training_type', type);
+  localStorage.removeItem('thomas_active_days');
+  renderDaysConfig();
+  renderDaySelect();
+  generateNewPlan();
+}
+
+function loadSavedTrainingType() {
+  const saved = localStorage.getItem('thomas_training_type');
+  if (saved && TRAINING_TYPES[saved]) {
+    currentTrainingType = saved;
+    DAYS = [...TRAINING_TYPES[saved].days];
+    document.querySelectorAll('.training-type-card').forEach(card => {
+      card.classList.toggle('selected', card.dataset.type === saved);
+    });
+  }
+  const savedDays = localStorage.getItem('thomas_active_days');
+  if (savedDays) activeDaysCount = parseInt(savedDays);
+  const savedDeload = localStorage.getItem('thomas_deload');
+  if (savedDeload === '1') {
+    isDeload = true;
+    const toggle = document.getElementById('deload-toggle');
+    if (toggle) toggle.checked = true;
+    const lbl = document.getElementById('deload-label-text');
+    if (lbl) lbl.textContent = 'Activé';
+  }
+}
+
+const PRIO_CLS  = { Maintenance:'maintenance', Modérée:'moderee', Prioritaire:'prioritaire', 'Ne fais pas':'nefaispas' };
+const BADGE_CLS = { Maintenance:'badge-maintenance', Modérée:'badge-moderee', Prioritaire:'badge-prioritaire', 'Ne fais pas':'badge-nefaispas' };
+
+// ══════════════════════ STATE ══════════════════════
+let currentPlan = null;
+let isDeload = false;
+let activeDaysCount = null;
+let activeSuivi = null;
+let timerInterval = null;
+let currentGoal = 'Prise de Masse'; // 'Force' | 'Prise de Masse' | 'Perte de Poids'
+
+// Config par objectif
+const GOAL_CONFIG = {
+  'Force':          { reps: '3–5',   restSec: 180, restLabel: '3 min',  pillClass: 'rp-force'  },
+  'Prise de Masse': { reps: '8–12',  restSec: 90,  restLabel: '90 s',   pillClass: 'rp-masse'  },
+  'Perte de Poids': { reps: '15–20', restSec: 45,  restLabel: '45 s',   pillClass: 'rp-cardio' },
+};
+
+function selectGoal(goal) {
+  if (currentGoal === goal) return;
+  currentGoal = goal;
+  document.querySelectorAll('.goal-card').forEach(c =>
+    c.classList.toggle('selected', c.dataset.goal === goal)
+  );
+  localStorage.setItem('thomas_goal', goal);
+  generateNewPlan();
+}
+
+function loadSavedGoal() {
+  const saved = localStorage.getItem('thomas_goal');
+  if (saved && GOAL_CONFIG[saved]) {
+    currentGoal = saved;
+    document.querySelectorAll('.goal-card').forEach(c =>
+      c.classList.toggle('selected', c.dataset.goal === saved)
+    );
+  }
+}
+
+function updateRestPill() {
+  const el = document.getElementById('suivi-rest-pill');
+  if (!el) return;
+  const cfg = GOAL_CONFIG[currentGoal] || GOAL_CONFIG['Prise de Masse'];
+  el.innerHTML = `<span class="rest-pill ${cfg.pillClass}">⏱ Repos recommandé : <strong>${cfg.restLabel}</strong></span>`;
+}
+
+// ── Plan Rattrapages persistence ──
+function savePlanRattrapages() {
+  const toSave = {};
+  if (!currentPlan) return;
+  Object.entries(currentPlan).forEach(([day, dayData]) => {
+    Object.entries(dayData).forEach(([muscle, exos]) => {
+      if (Array.isArray(exos) && exos._isRattrapage) {
+        if (!toSave[day]) toSave[day] = {};
+        toSave[day][muscle] = [...exos];
+      }
+    });
+  });
+  localStorage.setItem('lucas_plan_rattrapages', JSON.stringify(toSave));
+}
+
+function restorePlanRattrapages() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('lucas_plan_rattrapages') || '{}');
+    Object.entries(saved).forEach(([day, muscles]) => {
+      if (!currentPlan[day]) return;
+      Object.entries(muscles).forEach(([muscle, exos]) => {
+        const arr = Array.isArray(exos) ? exos : [];
+        arr._isRattrapage = true;
+        currentPlan[day][muscle] = arr;
+      });
+    });
+  } catch {}
+}
+
+function clearPlanRattrapages() { localStorage.removeItem('lucas_plan_rattrapages'); }
+
+// ══════════════════════ PLAN GEN ══════════════════════
+function shuffle(a) { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function generateNewPlan(silent) {
+  if (!silent && currentPlan) {
+    const hasRattrapages = Object.values(currentPlan).some(dayData =>
+      Object.values(dayData).some(exos => Array.isArray(exos) && exos._isRattrapage)
+    );
+    if (hasRattrapages) {
+      if (!confirm('⚠️ Des rattrapages sont planifiés dans le plan actuel.\nGénérer un nouveau plan va les effacer. Continuer ?')) return;
+    }
+  }
+  const deloadFactor = isDeload ? 0.5 : 1;
+  const activeDays = activeDaysCount ? DAYS.slice(0, activeDaysCount) : DAYS;
+  currentPlan = {};
+  activeDays.forEach(day => {
+    currentPlan[day.label] = {};
+    day.muscles.forEach(muscle => {
+      const m = MUSCLES.find(x => x.name === muscle);
+      if (!m) return;
+      if (m.priority === 'Ne fais pas') return;
+      const pool = shuffle([...(EXERCISES[muscle]||[])]);
+      const goalCfg = GOAL_CONFIG[currentGoal] || GOAL_CONFIG['Prise de Masse'];
+      // Force : +1 série pour les muscles Prioritaires
+      const forceBonus = (currentGoal === 'Force' && m.priority === 'Prioritaire') ? 1 : 0;
+      const targetSets = Math.max(2, Math.round((m.min+m.max)/2 * deloadFactor)) + forceBonus;
+      const numEx = Math.max(1, Math.round(targetSets/3.5));
+      const chosen = pool.slice(0, Math.min(numEx, pool.length));
+      const setsEach = Math.max(1, Math.round(targetSets/chosen.length));
+      const reps = isDeload ? '6–10' : goalCfg.reps;
+      currentPlan[day.label][muscle] = chosen.map(name => ({ name, sets: setsEach, reps }));
+    });
+  });
+  clearPlanRattrapages();
+  renderSession();
+  renderStats();
+}
+
+// ══════════════════════ TAB SWITCH ══════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id==='tab-'+name));
+  if (name==='historique') { renderHistorique(); renderHeatmap(); }
+  if (name==='programme') renderExoMgmt();
+  if (name==='graphiques') renderGraphiques();
+}
+
+// ══════════════════════ VIEW 1 – PRIORISATION ══════════════════════
+const PRIO_CONFIG = {
+  Maintenance:    { series:'3–5 séries',  min:3,  max:5,  label:'Maintenance' },
+  Modérée:        { series:'6–12 séries', min:6,  max:12, label:'Modérée' },
+  Prioritaire:    { series:'12+ séries',  min:12, max:16, label:'Prioritaire' },
+  'Ne fais pas':  { series:'0 série',     min:0,  max:0,  label:'Ne fais pas' },
+};
+
+function renderPriorityTable() {
+  const priorities = Object.keys(PRIO_CONFIG);
+  document.getElementById('priority-tbody').innerHTML = MUSCLES.map(m => {
+    const opts = priorities.map(p =>
+      `<option value="${p}" ${p === m.priority ? 'selected' : ''}>${p}</option>`
+    ).join('');
+    return `
+    <tr>
+      <td style="font-weight:600">${m.name}</td>
+      <td style="color:var(--muted2);font-size:0.82rem;font-family:var(--font-mono)">${m.series}</td>
+      <td>
+        <select class="prio-select prio-${m.priority}"
+          onchange="changePriority('${m.name}', this.value, this)">
+          ${opts}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function changePriority(muscleName, newPriority, selectEl) {
+  const m = MUSCLES.find(x => x.name === muscleName);
+  if (!m) return;
+  const cfg = PRIO_CONFIG[newPriority];
+  m.priority  = newPriority;
+  m.series    = cfg.series;
+  m.min       = cfg.min;
+  m.max       = cfg.max;
+  selectEl.className = `prio-select prio-${newPriority}`;
+  const row = selectEl.closest('tr');
+  row.cells[1].textContent = cfg.series;
+  renderPriorityBoard();
+  generateNewPlan();
+  savePriorities();
+  selectEl.style.boxShadow = '0 0 0 3px rgba(167,139,250,0.35)';
+  setTimeout(() => { selectEl.style.boxShadow = ''; }, 600);
+}
+
+function savePriorities() {
+  const saved = {};
+  MUSCLES.forEach(m => { saved[m.name] = m.priority; });
+  localStorage.setItem('thomas_priorities', JSON.stringify(saved));
+}
+
+function loadSavedPriorities() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('thomas_priorities') || '{}');
+    MUSCLES.forEach(m => {
+      if (saved[m.name] && PRIO_CONFIG[saved[m.name]]) {
+        const cfg = PRIO_CONFIG[saved[m.name]];
+        m.priority = saved[m.name];
+        m.series   = cfg.series;
+        m.min      = cfg.min;
+        m.max      = cfg.max;
+      }
+    });
+  } catch {}
+}
+
+function renderPriorityBoard() {
+  const board = document.getElementById('priority-board');
+  const groups = {Maintenance:[],Modérée:[],Prioritaire:[],'Ne fais pas':[]};
+  MUSCLES.forEach(m=>groups[m.priority] && groups[m.priority].push(m));
+  board.innerHTML = Object.entries(groups).map(([p,ms])=>`
+    <div class="priority-col col-${PRIO_CLS[p]}">
+      <div class="priority-col-header">
+        <span class="kanban-col-name col-name-${PRIO_CLS[p]}">${p}</span>
+        <span class="kanban-count">${ms.length}</span>
+      </div>
+      ${ms.map(m=>`
+        <div class="kanban-card ${p==='Ne fais pas'?'style="opacity:0.45"':''}">
+          ${m.name}
+          <div class="sets-info">${m.series}</div>
+          <div style="margin-top:5px"><span class="badge ${BADGE_CLS[m.priority]}">${m.priority}</span></div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+// ══════════════════════ VIEW 2 – EXERCICES ══════════════════════
+function loadSavedExercises() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('thomas_exercises') || 'null');
+    if (saved) Object.assign(EXERCISES, saved);
+  } catch {}
+}
+function saveExercises() { localStorage.setItem('thomas_exercises', JSON.stringify(EXERCISES)); }
+
+function renderExoMgmt() {
+  const grid = document.getElementById('exo-mgmt-grid');
+  if (!grid) return;
+  const m_keys = Object.keys(EXERCISES);
+  grid.innerHTML = m_keys.map(muscle => {
+    const mData = MUSCLES.find(x => x.name === muscle);
+    const p = mData ? PRIO_CLS[mData.priority] : 'moderee';
+    const exos = EXERCISES[muscle];
+    const items = exos.map((e, i) => `
+      <div class="exo-mgmt-item">
+        <span>${e}</span>
+        <button class="exo-del-btn" title="Supprimer" onclick="removeExercise('${muscle}',${i})">✕</button>
+      </div>`).join('');
+    return `
+      <div class="exo-mgmt-card">
+        <div class="exo-mgmt-header">
+          <span class="exo-mgmt-muscle col-name-${p}">${muscle}</span>
+          <span class="exo-mgmt-count">${exos.length} exercice${exos.length>1?'s':''}</span>
+        </div>
+        <div class="exo-mgmt-list">${items || '<div style="color:var(--muted);font-size:0.8rem;padding:6px 10px">Aucun exercice.</div>'}</div>
+        <div class="exo-add-row">
+          <input class="exo-add-input" id="exo-inp-${muscle}" placeholder="Nom de l'exercice…"
+            onkeydown="if(event.key==='Enter') addExercise('${muscle}')" />
+          <button class="exo-add-btn" onclick="addExercise('${muscle}')">+ Ajouter</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function addExercise(muscle) {
+  const inp = document.getElementById(`exo-inp-${muscle}`);
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (!name) { inp.focus(); return; }
+  if (EXERCISES[muscle].includes(name)) { inp.select(); return; }
+  EXERCISES[muscle].push(name);
+  saveExercises(); generateNewPlan(); renderExoMgmt();
+  const newInp = document.getElementById(`exo-inp-${muscle}`);
+  if (newInp) newInp.focus();
+}
+
+function removeExercise(muscle, idx) {
+  if (EXERCISES[muscle].length <= 1) { alert('Il doit rester au moins un exercice par groupe.'); return; }
+  EXERCISES[muscle].splice(idx, 1);
+  saveExercises(); generateNewPlan(); renderExoMgmt();
+}
+
+function resetExercises() {
+  if (!confirm('Remettre tous les exercices par défaut ?')) return;
+  Object.keys(EXERCISES_DEFAULT).forEach(k => { EXERCISES[k] = [...EXERCISES_DEFAULT[k]]; });
+  localStorage.removeItem('thomas_exercises');
+  generateNewPlan(); renderExoMgmt();
+}
+
+// ══════════════════════ VIEW 3 – SÉANCES ══════════════════════
+function renderDaySelect() {
+  const sel = document.getElementById('day-select');
+  const activeDays = activeDaysCount ? DAYS.slice(0, activeDaysCount) : DAYS;
+  sel.innerHTML = activeDays.map(d=>`<option value="${d.label}">${d.label} – ${d.muscles.slice(0,3).join(', ')}…</option>`).join('');
+  renderDaysConfig();
+}
+
+function renderStats() {
+  if (!currentPlan) return;
+  let totalSets = 0, totalExos = 0;
+  Object.values(currentPlan).forEach(dayData => {
+    Object.values(dayData).forEach(exos => {
+      if (!Array.isArray(exos)) return;
+      totalExos += exos.length;
+      exos.forEach(e => { totalSets += (e && e.sets) ? e.sets : 0; });
+    });
+  });
+  const seancesCount = Object.keys(currentPlan).length;
+  document.getElementById('stats-strip').innerHTML = `
+    <div class="stat-card violet"><div class="stat-value" style="color:var(--violet)">${seancesCount}</div><div class="stat-label">Séances / sem.</div></div>
+    <div class="stat-card emerald"><div class="stat-value" style="color:var(--emerald)">${totalExos}</div><div class="stat-label">Exercices</div></div>
+    <div class="stat-card amber"><div class="stat-value" style="color:var(--amber)">${totalSets}</div><div class="stat-label">Séries totales${isDeload?' 🔆':''}</div></div>
+    <div class="stat-card red"><div class="stat-value" style="color:var(--red)">${MUSCLES.filter(m=>m.priority==='Prioritaire').length}</div><div class="stat-label">Muscles prio.</div></div>`;
+}
+
+function renderSession() {
+  const dayLabel = document.getElementById('day-select').value;
+  if (!currentPlan || !currentPlan[dayLabel]) { generateNewPlan(); return; }
+  const dayData = currentPlan[dayLabel];
+  document.getElementById('session-board').innerHTML = Object.entries(dayData).map(([muscle, exos]) => {
+    if (!Array.isArray(exos)) return '';
+    const m = MUSCLES.find(x => x.name === muscle);
+    const p = m ? PRIO_CLS[m.priority] : 'moderee';
+    const totalSets = exos.reduce((s, e) => s + e.sets, 0);
+    const pool = EXERCISES[muscle] || [];
+    const isRattrapage = !!exos._isRattrapage;
+
+    const cards = exos.map((e, ei) => {
+      const cardId = `swap-${muscle.replace(/\s/g,'_')}-${ei}`;
+      return `<div class="kanban-card" id="card-${cardId}">
+        <div class="kanban-card-top">
+          <span class="kanban-card-name">${e.name}</span>
+          ${pool.length > 1 ? `<button class="swap-btn" title="Changer l'exercice" data-cardid="${cardId}" data-day="${dayLabel}" data-muscle="${muscle}" data-ei="${ei}">🔄</button>` : ''}
+        </div>
+        <div class="sets-info">${e.sets} séries × ${e.reps} rép.</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="kanban-col col-${p}">
+      <div class="kanban-col-header">
+        <span class="kanban-col-name col-name-${p}">${muscle}${isRattrapage ? ' <span style="font-size:0.6rem;color:var(--amber);background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.25);border-radius:4px;padding:1px 5px;margin-left:4px">⚡</span>' : ''}</span>
+        <span class="kanban-count">${totalSets} sér.</span>
+      </div>
+      ${cards}
+    </div>`;
+  }).join('');
+}
+
+// ── Global floating swap dropdown ──
+var _swapDropdown = null;
+var _swapMeta = {};
+
+function getSwapDropdown() {
+  if (!_swapDropdown) {
+    _swapDropdown = document.createElement('div');
+    _swapDropdown.id = 'global-swap-dropdown';
+    _swapDropdown.className = 'swap-dropdown';
+    document.body.appendChild(_swapDropdown);
+  }
+  return _swapDropdown;
+}
+
+function openSwapMenu(btn) {
+  const cardId  = btn.dataset.cardid;
+  const dayLabel = btn.dataset.day;
+  const muscle  = btn.dataset.muscle;
+  const ei      = parseInt(btn.dataset.ei);
+  const pool    = EXERCISES[muscle] || [];
+  const current = currentPlan[dayLabel][muscle][ei].name;
+
+  _swapMeta = { dayLabel, muscle, ei, cardId };
+
+  const dd = getSwapDropdown();
+
+  // Already open for this button → close
+  if (dd.classList.contains('open') && dd.dataset.cardid === cardId) {
+    dd.classList.remove('open');
+    return;
+  }
+
+  // Build options
+  dd.innerHTML = pool.map(name => {
+    const isCurrent = name === current;
+    return `<div class="swap-option${isCurrent ? ' current' : ''}" data-name="${name}">${isCurrent ? '✓ ' : ''}${name}</div>`;
+  }).join('');
+  dd.dataset.cardid = cardId;
+
+  // Position below the card
+  const card = document.getElementById('card-' + cardId);
+  const rect = card.getBoundingClientRect();
+  dd.style.top   = (rect.bottom + window.scrollY + 4) + 'px';
+  dd.style.left  = rect.left + 'px';
+  dd.style.width = rect.width + 'px';
+  dd.style.position = 'absolute';
+
+  dd.classList.add('open');
+}
+
+function closeSwapMenu() {
+  const dd = _swapDropdown;
+  if (dd) dd.classList.remove('open');
+}
+
+function toggleSwapMenu(cardId, event) {
+  event.stopPropagation();
+}
+
+function swapExercise(dayLabel, muscle, exoIndex, newName, cardId) {
+  if (!currentPlan[dayLabel] || !currentPlan[dayLabel][muscle]) return;
+  currentPlan[dayLabel][muscle][exoIndex].name = newName;
+  closeSwapMenu();
+  const card = document.getElementById('card-' + cardId);
+  if (card) {
+    const nameEl = card.querySelector('.kanban-card-name');
+    if (nameEl) nameEl.textContent = newName;
+  }
+}
+
+document.addEventListener('click', function(e) {
+  // Swap button
+  const btn = e.target.closest('.swap-btn[data-cardid]');
+  if (btn) {
+    e.stopPropagation();
+    openSwapMenu(btn);
+    return;
+  }
+
+  // Option in global dropdown
+  const opt = e.target.closest('#global-swap-dropdown .swap-option:not(.current)');
+  if (opt) {
+    e.stopPropagation();
+    const name = opt.dataset.name;
+    const { dayLabel, muscle, ei, cardId } = _swapMeta;
+    swapExercise(dayLabel, muscle, ei, name, cardId);
+    return;
+  }
+
+  // Click outside → close
+  closeSwapMenu();
+});
+
+// ══════════════════════ VIEW 4 – SUIVI ══════════════════════
+function startSuivi() {
+  const dayLabel = document.getElementById('day-select').value;
+  if (!currentPlan || !currentPlan[dayLabel]) { generateNewPlan(); return; }
+  const dayData = currentPlan[dayLabel];
+  const setData = {};
+  Object.entries(dayData).forEach(([muscle, exos]) => {
+    exos.forEach((exo, ei) => {
+      const key = `${muscle}__${ei}`;
+      setData[key] = Array.from({length: exo.sets}, () => ({ weight:'', reps:'', done:false }));
+    });
+  });
+  activeSuivi = { dayLabel, dayData, startTime: Date.now(), setData, notes: {}, globalNote: '', rattrapages: {} };
+  const gnField = document.getElementById('global-note-textarea');
+  if (gnField) gnField.value = '';
+  document.getElementById('suivi-badge').style.display = '';
+  switchTab('suivi');
+  renderSuivi();
+  startTimer();
+}
+
+function renderSuivi() {
+  if (!activeSuivi) return;
+  document.getElementById('suivi-empty').style.display = 'none';
+  document.getElementById('suivi-active').style.display = '';
+  document.getElementById('suivi-finish').style.display = 'none';
+  document.getElementById('suivi-day-label').textContent = activeSuivi.dayLabel;
+  updateRestPill(); // afficher le temps de repos selon l'objectif
+
+  const { dayData, setData, notes } = activeSuivi;
+  const grid = document.getElementById('suivi-grid');
+
+  grid.innerHTML = Object.entries(dayData).map(([muscle, exos]) => {
+    const m = MUSCLES.find(x=>x.name===muscle);
+    const p = m ? PRIO_CLS[m.priority] : 'moderee';
+
+    const muscleHTML = exos.map((exo, ei) => {
+      const key = `${muscle}__${ei}`;
+      const sets = setData[key];
+      const setsHTML = sets.map((s, si) => `
+        <div class="set-chip ${s.done?'done':''}" onclick="toggleSet('${key}',${si})" id="chip-${key}-${si}">
+          <span class="set-check">✓</span>
+          <span class="set-chip-label">Série ${si+1}</span>
+          <div class="set-chip-inputs">
+            <input type="number" min="0" placeholder="kg" value="${s.weight}"
+              onclick="event.stopPropagation()"
+              onchange="updateSetData('${key}',${si},'weight',this.value)"
+              id="inp-w-${key}-${si}" />
+            <span class="set-chip-sep">×</span>
+            <input type="number" min="0" placeholder="rép" value="${s.reps}"
+              onclick="event.stopPropagation()"
+              onchange="updateSetData('${key}',${si},'reps',this.value)"
+              id="inp-r-${key}-${si}" />
+          </div>
+        </div>`).join('');
+
+      return `<div class="suivi-exo-row">
+        <div class="suivi-exo-name">${exo.name}</div>
+        <div class="sets-row">${setsHTML}</div>
+        <textarea class="suivi-note-input" placeholder="Note (optionnel)…"
+          onchange="activeSuivi.notes['${key}'] = this.value"
+          >${notes[key]||''}</textarea>
+      </div>`;
+    }).join('');
+
+    const total = Object.keys(setData).filter(k=>k.startsWith(muscle+'__')).reduce((s,k)=>s+setData[k].length,0);
+    const done  = Object.keys(setData).filter(k=>k.startsWith(muscle+'__')).reduce((s,k)=>s+setData[k].filter(x=>x.done).length,0);
+    const pct   = total ? Math.round(done/total*100) : 0;
+    const isRattrapage = activeSuivi.rattrapages && activeSuivi.rattrapages[muscle];
+
+    // SVG circular progress
+    const r = 14; const circ = 2*Math.PI*r;
+    const stroke = pct/100 * circ;
+    const circSVG = `
+      <div class="muscle-circle-progress" style="width:36px;height:36px">
+        <svg width="36" height="36" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="${r}" fill="none" stroke="rgba(100,100,180,0.15)" stroke-width="3"/>
+          <circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--violet)" stroke-width="3"
+            stroke-dasharray="${stroke} ${circ}" stroke-linecap="round"
+            transform="rotate(-90 18 18)" style="transition:stroke-dasharray 0.4s ease"/>
+        </svg>
+        <div class="muscle-circle-text">${pct}%</div>
+      </div>`;
+
+    return `<div class="suivi-muscle-block">
+      <div class="suivi-muscle-header col-name-${p}" onclick="toggleBlock(this)">
+        <div class="suivi-muscle-header-left">
+          ${circSVG}
+          <div>
+            <div class="suivi-muscle-name">${muscle}</div>
+            <div class="suivi-muscle-progress" id="mprog-${muscle}">${done}/${total} séries</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
+          <button class="rattrapage-btn ${isRattrapage?'active':''}" id="rbtn-${muscle}"
+            onclick="toggleRattrapage('${muscle}')" title="Marquer comme à rattraper">
+            ${isRattrapage?'⚡ À rattraper':'+ Rattraper'}
+          </button>
+          <span style="color:var(--muted);font-size:0.75rem">▾</span>
+        </div>
+      </div>
+      <div class="suivi-exercises">${muscleHTML}</div>
+    </div>`;
+  }).join('');
+
+  updateSuiviProgress();
+  renderRecoveryAlerts(dayData);
+}
+
+// ── RATTRAPAGE ──
+const DAYS_SEMAINE = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+function toggleRattrapage(muscle) {
+  if (!activeSuivi) return;
+  if (!activeSuivi.rattrapages) activeSuivi.rattrapages = {};
+  if (activeSuivi.rattrapages[muscle]) { delete activeSuivi.rattrapages[muscle]; }
+  else { activeSuivi.rattrapages[muscle] = { scheduledDay: null, done: false }; }
+  const btn = document.getElementById(`rbtn-${muscle}`);
+  const isActive = !!activeSuivi.rattrapages[muscle];
+  if (btn) { btn.classList.toggle('active', isActive); btn.textContent = isActive ? '⚡ À rattraper' : '+ Rattraper'; }
+  renderRattrapagePanel();
+}
+
+function renderRattrapagePanel() {
+  const panel = document.getElementById('rattrapage-panel');
+  if (!activeSuivi || !activeSuivi.rattrapages) { panel.style.display='none'; return; }
+  const entries = Object.entries(activeSuivi.rattrapages);
+  if (!entries.length) { panel.style.display='none'; return; }
+  panel.style.display = '';
+  const availableDays = getAvailableRattrapageDays();
+  const items = entries.map(([muscle, info]) => {
+    const dayOpts = availableDays.map(d => `<option value="${d}" ${info.scheduledDay===d?'selected':''}>${d}</option>`).join('');
+    const doneBadge = info.done ? `<span class="rattrapage-done-badge">✓ Fait</span>` : '';
+    return `<div class="rattrapage-item">
+      <span class="rattrapage-item-muscle">${muscle}${info.scheduledDay ? `<span>→ ${info.scheduledDay}</span>` : ''}</span>
+      ${doneBadge}
+      <select class="rattrapage-day-select" onchange="setRattrapageDay('${muscle}',this.value)">
+        <option value="">Choisir un jour…</option>${dayOpts}
+      </select>
+      ${!info.done ? `<button class="rattrapage-remove-btn" onclick="markRattrapage('${muscle}')" title="Marquer comme fait">✓</button>` : ''}
+      <button class="rattrapage-remove-btn" onclick="removeRattrapage('${muscle}')" title="Supprimer">✕</button>
+    </div>`;
+  }).join('');
+  panel.innerHTML = `<div class="rattrapage-panel">
+    <div class="rattrapage-panel-title">⚡ Rattrapages de la semaine
+      <span style="font-size:0.72rem;font-weight:500;color:var(--muted2)">${entries.length} muscle${entries.length>1?'s':''}</span>
+    </div>
+    <div class="rattrapage-list">${items}</div>
+  </div>`;
+}
+
+function setRattrapageDay(muscle, day) {
+  if (!activeSuivi || !activeSuivi.rattrapages[muscle]) return;
+  const prevDay = activeSuivi.rattrapages[muscle].scheduledDay;
+  if (prevDay && currentPlan[prevDay]) {
+    const prevExos = currentPlan[prevDay][muscle];
+    if (prevExos && prevExos._isRattrapage) delete currentPlan[prevDay][muscle];
+  }
+  activeSuivi.rattrapages[muscle].scheduledDay = day || null;
+  if (day && currentPlan[day] !== undefined) {
+    const sourceExos = activeSuivi.dayData[muscle];
+    if (sourceExos) {
+      const clonedExos = JSON.parse(JSON.stringify(sourceExos));
+      clonedExos._isRattrapage = true;
+      currentPlan[day][muscle] = clonedExos;
+    }
+  }
+  renderRattrapagePanel();
+  renderSession();
+  savePlanRattrapages();
+}
+
+function markRattrapage(muscle) {
+  if (!activeSuivi || !activeSuivi.rattrapages[muscle]) return;
+  activeSuivi.rattrapages[muscle].done = true;
+  renderRattrapagePanel();
+}
+
+function removeRattrapage(muscle) {
+  if (!activeSuivi || !activeSuivi.rattrapages) return;
+  const scheduledDay = activeSuivi.rattrapages[muscle]?.scheduledDay;
+  if (scheduledDay && currentPlan[scheduledDay]) {
+    const exos = currentPlan[scheduledDay][muscle];
+    if (exos && exos._isRattrapage) delete currentPlan[scheduledDay][muscle];
+  }
+  delete activeSuivi.rattrapages[muscle];
+  const btn = document.getElementById(`rbtn-${muscle}`);
+  if (btn) { btn.classList.remove('active'); btn.textContent = '+ Rattraper'; }
+  renderRattrapagePanel();
+  renderSession();
+  savePlanRattrapages();
+}
+
+function toggleBlock(header) {
+  const block = header.parentElement;
+  const exoDiv = block.querySelector('.suivi-exercises');
+  const arrow = header.querySelector('span:last-child');
+  const collapsed = exoDiv.style.display === 'none';
+  exoDiv.style.display = collapsed ? '' : 'none';
+  if (arrow) arrow.textContent = collapsed ? '▾' : '▸';
+}
+
+function toggleSet(key, si) {
+  if (!activeSuivi) return;
+  const s = activeSuivi.setData[key][si];
+  s.done = !s.done;
+  const chip = document.getElementById(`chip-${key}-${si}`);
+  if (chip) chip.classList.toggle('done', s.done);
+  const check = chip.querySelector('.set-check');
+  if (check) check.style.display = s.done ? 'block' : 'none';
+  if (s.done) restTimerStart();
+  else restTimerStop();
+  updateSuiviProgress();
+  updateMuscleProg(key.split('__')[0]);
+
+  // Update SVG circle for this muscle
+  const muscle = key.split('__')[0];
+  const sd = activeSuivi.setData;
+  const keys = Object.keys(sd).filter(k=>k.startsWith(muscle+'__'));
+  const total = keys.reduce((s,k)=>s+sd[k].length,0);
+  const done  = keys.reduce((s,k)=>s+sd[k].filter(x=>x.done).length,0);
+  const pct = total ? Math.round(done/total*100) : 0;
+  const r = 14; const circ = 2*Math.PI*r;
+  const stroke = pct/100 * circ;
+  // Find the muscle block and update SVG
+  const blocks = document.querySelectorAll('.suivi-muscle-block');
+  blocks.forEach(block => {
+    const name = block.querySelector('.suivi-muscle-name');
+    if (name && name.textContent === muscle) {
+      const circle = block.querySelector('circle:last-child');
+      const pctEl = block.querySelector('.muscle-circle-text');
+      if (circle) circle.setAttribute('stroke-dasharray', `${stroke} ${circ}`);
+      if (pctEl) pctEl.textContent = pct + '%';
+    }
+  });
+}
+
+function updateSetData(key, si, field, val) {
+  if (!activeSuivi) return;
+  activeSuivi.setData[key][si][field] = val;
+}
+
+function updateMuscleProg(muscle) {
+  const sd = activeSuivi.setData;
+  const keys = Object.keys(sd).filter(k=>k.startsWith(muscle+'__'));
+  const total = keys.reduce((s,k)=>s+sd[k].length,0);
+  const done  = keys.reduce((s,k)=>s+sd[k].filter(x=>x.done).length,0);
+  const el = document.getElementById(`mprog-${muscle}`);
+  if (el) el.textContent = `${done}/${total} séries`;
+}
+
+function updateSuiviProgress() {
+  if (!activeSuivi) return;
+  const allSets = Object.values(activeSuivi.setData).flat();
+  const done = allSets.filter(s=>s.done).length;
+  const total = allSets.length;
+  document.getElementById('suivi-progress-text').textContent = `${done} / ${total} séries`;
+  document.getElementById('suivi-progress-bar').style.width = total ? `${(done/total)*100}%` : '0%';
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (!activeSuivi) { clearInterval(timerInterval); return; }
+    const elapsed = Math.floor((Date.now() - activeSuivi.startTime)/1000);
+    const m = String(Math.floor(elapsed/60)).padStart(2,'0');
+    const s = String(elapsed%60).padStart(2,'0');
+    const el = document.getElementById('suivi-timer');
+    if (el) el.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function finishSession() {
+  if (!activeSuivi) return;
+  clearInterval(timerInterval);
+  const elapsed = Math.floor((Date.now()-activeSuivi.startTime)/1000);
+  const allSets = Object.values(activeSuivi.setData).flat();
+  const doneSets = allSets.filter(s=>s.done).length;
+  const record = {
+    id: Date.now(), dayLabel: activeSuivi.dayLabel,
+    date: new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    durationSec: elapsed, totalSets: allSets.length, doneSets,
+    dayData: activeSuivi.dayData, setData: activeSuivi.setData,
+    notes: activeSuivi.notes, globalNote: activeSuivi.globalNote || '',
+    rattrapages: activeSuivi.rattrapages || {},
+  };
+  const hist = loadHistory();
+  hist.unshift(record);
+  saveHistory(hist);
+
+  const mm = String(Math.floor(elapsed/60)).padStart(2,'0');
+  const ss = String(elapsed%60).padStart(2,'0');
+  const rattrapageEntries = Object.entries(activeSuivi.rattrapages || {});
+  const rattrapageSummary = rattrapageEntries.length
+    ? `<div style="background:rgba(240,165,0,0.07);border:1px solid rgba(240,165,0,0.25);border-radius:8px;padding:11px 16px;margin:14px 0;text-align:left;font-size:0.8rem;">
+        <div style="font-weight:700;color:var(--amber);margin-bottom:7px;font-family:var(--font-title);text-transform:uppercase;letter-spacing:0.04em">⚡ ${rattrapageEntries.length} rattrage${rattrapageEntries.length>1?'s':''} cette semaine</div>
+        ${rattrapageEntries.map(([m,info])=>`<div style="color:var(--muted2);display:flex;gap:6px;margin-bottom:3px">
+          <span style="color:#f5c97f;font-weight:600">${m}</span>
+          ${info.scheduledDay?`<span>→ ${info.scheduledDay}</span>`:'<span style="color:var(--muted)">Jour à définir</span>'}
+        </div>`).join('')}
+      </div>` : '';
+
+  document.getElementById('finish-summary-text').textContent = `Tu as complété ${doneSets} séries (sur ${allSets.length}) en ${mm}:${ss}.`;
+
+  const finishBanner = document.querySelector('.finish-banner');
+  const oldRatBlock = finishBanner.querySelector('.rattrapage-summary-block');
+  if (oldRatBlock) oldRatBlock.remove();
+  if (rattrapageSummary) {
+    const div = document.createElement('div');
+    div.className = 'rattrapage-summary-block';
+    div.innerHTML = rattrapageSummary;
+    const btnRow = finishBanner.querySelector('div[style]');
+    finishBanner.insertBefore(div, btnRow);
+  }
+
+  restTimerStop();
+  document.getElementById('suivi-active').style.display = 'none';
+  document.getElementById('suivi-finish').style.display = '';
+  document.getElementById('suivi-badge').style.display = 'none';
+  activeSuivi = null;
+  updateHistBadge();
+  checkRattrapageReminder();
+}
+
+function cancelSession() {
+  if (!confirm('Annuler la séance en cours ?')) return;
+  clearInterval(timerInterval);
+  restTimerStop();
+  activeSuivi = null;
+  document.getElementById('suivi-badge').style.display = 'none';
+  resetSuivi();
+}
+
+function resetSuivi() {
+  document.getElementById('suivi-empty').style.display = '';
+  document.getElementById('suivi-empty').style.alignItems = 'center';
+  document.getElementById('suivi-active').style.display = 'none';
+  document.getElementById('suivi-finish').style.display = 'none';
+}
+
+// ══════════════════════ VIEW 5 – HISTORIQUE ══════════════════════
+function loadHistory() { try { return JSON.parse(localStorage.getItem('lucas_history')||'[]'); } catch { return []; } }
+function saveHistory(hist) { localStorage.setItem('lucas_history', JSON.stringify(hist)); }
+
+function updateHistBadge() {
+  const n = loadHistory().length;
+  const badge = document.getElementById('hist-badge');
+  if (badge) badge.textContent = n;
+  const bnavDot = document.getElementById('bnav-hist-dot');
+  if (bnavDot) bnavDot.parentElement.classList.toggle('has-badge', n > 0);
+  document.getElementById('clear-hist-btn').style.display = n > 0 ? '' : 'none';
+}
+
+// ══════════════════════════════════════════════════
+// ──────── HEATMAP — CALENDRIER DE RÉGULARITÉ ────
+// ══════════════════════════════════════════════════
+
+let heatmapYear = new Date().getFullYear();
+
+function renderHeatmap() {
+  const hist = loadHistory();
+  const tooltip = document.getElementById('hc-tooltip');
+
+  // ── Build day-count map ──
+  // key = "YYYY-MM-DD", value = number of sessions
+  const dayMap = {};
+  hist.forEach(rec => {
+    const d = new Date(rec.id);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    dayMap[key] = (dayMap[key] || 0) + 1;
+  });
+
+  // ── Year chips ──
+  const years = [...new Set(hist.map(r => new Date(r.id).getFullYear()))].sort((a,b)=>b-a);
+  const curYear = new Date().getFullYear();
+  if (!years.includes(curYear)) years.unshift(curYear);
+
+  const chipsEl = document.getElementById('heatmap-year-chips');
+  chipsEl.innerHTML = years.map(y =>
+    `<div class="heatmap-year-chip ${y === heatmapYear ? 'active' : ''}"
+       onclick="heatmapYear=${y};renderHeatmap()">${y}</div>`
+  ).join('');
+
+  // ── Stats for selected year ──
+  const yearSessions  = hist.filter(r => new Date(r.id).getFullYear() === heatmapYear);
+  const uniqueDays    = new Set(yearSessions.map(r => { const d=new Date(r.id); return `${d.getMonth()}-${d.getDate()}`; })).size;
+  const totalSets     = yearSessions.reduce((s,r) => s + (r.doneSets||0), 0);
+  // Streak (consecutive days up to today)
+  let streak = 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let i = 0; i < 366; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (dayMap[k]) streak++;
+    else if (i > 0) break; // allow today to be empty
+  }
+
+  document.getElementById('heatmap-stats').innerHTML = `
+    <div class="heatmap-stat"><div class="heatmap-stat-val" style="color:var(--emerald)">${yearSessions.length}</div><div class="heatmap-stat-lbl">Séances ${heatmapYear}</div></div>
+    <div class="heatmap-stat"><div class="heatmap-stat-val" style="color:var(--violet)">${uniqueDays}</div><div class="heatmap-stat-lbl">Jours actifs</div></div>
+    <div class="heatmap-stat"><div class="heatmap-stat-val" style="color:var(--amber)">${streak}</div><div class="heatmap-stat-lbl">Streak actuel</div></div>
+    <div class="heatmap-stat"><div class="heatmap-stat-val" style="color:var(--muted2)">${totalSets}</div><div class="heatmap-stat-lbl">Séries totales</div></div>
+  `;
+
+  // ── Build grid ──
+  // Jan 1 of selected year
+  const jan1     = new Date(heatmapYear, 0, 1);
+  // The grid starts on the Monday of the week containing Jan 1
+  const startDay = new Date(jan1);
+  // getDay(): 0=Sun,1=Mon,...6=Sat → we want Mon=0
+  const dow = (jan1.getDay() + 6) % 7; // Mon=0
+  startDay.setDate(jan1.getDate() - dow);
+
+  // End: last day of year
+  const dec31 = new Date(heatmapYear, 11, 31);
+  const endDay = new Date(dec31);
+  const dowEnd = (dec31.getDay() + 6) % 7;
+  endDay.setDate(dec31.getDate() + (6 - dowEnd));
+
+  // Build column array: each column = 1 week (Mon→Sun)
+  const MONTHS = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+  const WDAYS  = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+  const cols = [];
+  let cur = new Date(startDay);
+  while (cur <= endDay) {
+    const col = [];
+    for (let d = 0; d < 7; d++) {
+      col.push(new Date(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    cols.push(col);
+  }
+
+  // Month label positions (which column index does each month start?)
+  const monthPos = {}; // month → first col index where it appears in heatmapYear
+  cols.forEach((col, ci) => {
+    col.forEach(day => {
+      if (day.getFullYear() === heatmapYear) {
+        const m = day.getMonth();
+        if (monthPos[m] === undefined) monthPos[m] = ci;
+      }
+    });
+  });
+
+  // ── Render month labels ──
+  let monthLabelHTML = '';
+  // We'll build an absolutely-positioned flex with per-column widths
+  // Simpler: build an array of labels per column
+  const colLabels = Array(cols.length).fill('');
+  Object.entries(monthPos).forEach(([m, ci]) => {
+    colLabels[ci] = MONTHS[m];
+  });
+
+  // ── Render grid DOM ──
+  const CELL = 11, GAP = 2;
+  const colW  = CELL + GAP;
+
+  let gridHTML = `<div class="heatmap-grid-wrap">`;
+
+  // Month labels row
+  gridHTML += `<div class="heatmap-month-labels" style="margin-left:${CELL+8}px">`;
+  colLabels.forEach(lbl => {
+    gridHTML += `<div class="heatmap-month-label" style="width:${colW}px;flex-shrink:0">${lbl}</div>`;
+  });
+  gridHTML += `</div>`;
+
+  // Body: weekday labels + columns
+  gridHTML += `<div class="heatmap-body">`;
+
+  // Weekday labels
+  gridHTML += `<div class="heatmap-weekday-labels">`;
+  WDAYS.forEach(wd => {
+    gridHTML += `<div class="heatmap-wd-label" style="height:${CELL}px;margin-bottom:${GAP}px">${wd}</div>`;
+  });
+  gridHTML += `</div>`;
+
+  // Columns
+  gridHTML += `<div class="heatmap-columns">`;
+  cols.forEach(col => {
+    gridHTML += `<div class="heatmap-col">`;
+    col.forEach(day => {
+      const inYear = day.getFullYear() === heatmapYear;
+      if (!inYear) {
+        gridHTML += `<div class="hc" data-count="0" style="opacity:0.2"></div>`;
+        return;
+      }
+      const k = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+      const cnt = dayMap[k] || 0;
+      const level = cnt === 0 ? '0' : cnt === 1 ? '1' : cnt === 2 ? '2' : '3+';
+      const isToday = day.toDateString() === new Date().toDateString();
+      const dateStr = day.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+      const sessionWord = cnt > 1 ? 'séances' : 'séance';
+      const tip = cnt === 0
+        ? `${dateStr} — Repos`
+        : `${dateStr} — ${cnt} ${sessionWord}`;
+      const todayStyle = isToday ? 'outline:2px solid var(--violet);outline-offset:1px;' : '';
+      gridHTML += `<div class="hc" data-count="${level}" data-tip="${tip}" style="${todayStyle}"></div>`;
+    });
+    gridHTML += `</div>`;
+  });
+  gridHTML += `</div>`; // columns
+  gridHTML += `</div>`; // body
+  gridHTML += `</div>`; // grid-wrap
+
+  document.getElementById('heatmap-grid').innerHTML = gridHTML;
+
+  // ── Tooltip events ──
+  document.querySelectorAll('.hc[data-tip]').forEach(cell => {
+    cell.addEventListener('mouseenter', e => {
+      tooltip.textContent = '';
+      const tip = cell.dataset.tip;
+      // Parse to add bold count
+      const parts = tip.split(' — ');
+      tooltip.innerHTML = `<span style="color:var(--muted2)">${parts[0]}</span>${parts[1] ? ` — <strong>${parts[1]}</strong>` : ''}`;
+      tooltip.classList.add('visible');
+    });
+    cell.addEventListener('mousemove', e => {
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top  = (e.clientY - 28) + 'px';
+    });
+    cell.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+  });
+}
+
+function renderHistorique() {
+  const hist = loadHistory();
+  const container = document.getElementById('hist-content');
+  updateHistBadge();
+  renderHeatmap();
+  if (!hist.length) {
+    container.innerHTML = `<div class="hist-empty"><div class="hist-empty-icon">📋</div><p>Aucune séance enregistrée.<br/>Démarre et termine une séance pour la voir apparaître ici.</p></div>`;
+    return;
+  }
+  container.innerHTML = `<div class="hist-list">${hist.map((rec, idx) => {
+    const mm = String(Math.floor(rec.durationSec/60)).padStart(2,'0');
+    const ss = String(rec.durationSec%60).padStart(2,'0');
+    const pct = rec.totalSets ? Math.round(rec.doneSets/rec.totalSets*100) : 0;
+
+    const detailHTML = rec.dayData ? Object.entries(rec.dayData).map(([muscle, exos]) => {
+      const rows = exos.map((exo, ei) => {
+        const key = `${muscle}__${ei}`;
+        const sets = (rec.setData||{})[key]||[];
+        const setsText = sets.map((s,si)=>{
+          const doneClass = s.done ? 'exo-done-badge' : '';
+          const info = [s.weight?`${s.weight}kg`:'',s.reps?`${s.reps}rép`:''].filter(Boolean).join(' × ');
+          return `<td class="exo-set ${doneClass}">${s.done?'✓':si+1} ${info}</td>`;
+        }).join('');
+        return `<tr><td class="exo-name">${exo.name}</td>${setsText}</tr>`;
+      }).join('');
+      const note = Object.keys(rec.notes||{}).filter(k=>k.startsWith(muscle+'__')).map(k=>rec.notes[k]).filter(Boolean).join(' | ');
+      return `<div class="hist-muscle-block">
+        <div class="hist-muscle-name">${muscle}</div>
+        <table class="hist-exo-table"><tbody>${rows}</tbody></table>
+        ${note?`<div style="font-size:0.73rem;color:var(--muted2);margin-top:4px;padding-left:10px">📝 ${note}</div>`:''}
+      </div>`;
+    }).join('') : '';
+
+    const globalNoteHTML = rec.globalNote ? `
+      <div style="background:rgba(0,0,0,0.03);border:1px solid var(--border);border-radius:7px;padding:9px 12px;margin-bottom:10px;font-size:0.8rem;color:var(--muted2);">
+        <span style="font-weight:700;color:var(--text)">📝 Note :</span> ${rec.globalNote}
+      </div>` : '';
+
+    const rattrapagesHTML = rec.rattrapages && Object.keys(rec.rattrapages).length ? `
+      <div style="background:rgba(240,165,0,0.05);border:1px solid rgba(240,165,0,0.18);border-radius:8px;padding:10px 14px;margin-bottom:10px;">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--amber);margin-bottom:7px;font-family:var(--font-title);text-transform:uppercase;letter-spacing:0.05em">⚡ Rattrapages planifiés</div>
+        ${Object.entries(rec.rattrapages).map(([m,info])=>`
+          <div style="font-size:0.78rem;display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            ${info.done ? '<span style="color:var(--emerald);font-weight:700">✓</span>' : '<span style="color:var(--amber)">•</span>'}
+            <span style="font-weight:600">${m}</span>
+            ${info.scheduledDay ? `<span style="color:var(--muted2)">→ ${info.scheduledDay}</span>` : ''}
+            ${info.done
+              ? '<span style="background:rgba(5,150,105,0.12);color:var(--emerald);border-radius:4px;padding:1px 6px;font-size:0.65rem;font-weight:700;border:1px solid rgba(5,150,105,0.2)">Fait</span>'
+              : `<button onclick="markRattrapageDone(${rec.id},'${m.replace(/'/g,"\\'")}')" style="background:rgba(5,150,105,0.1);border:1px solid rgba(5,150,105,0.25);color:var(--emerald);border-radius:4px;padding:2px 8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">✓ Fait</button>`
+            }
+          </div>`).join('')}
+      </div>` : '';
+
+    return `<div class="hist-card" id="hcard-${idx}">
+      <div class="hist-card-header" onclick="toggleHistCard(${idx})">
+        <div class="hist-card-title">
+          <span class="hist-card-date">${rec.dayLabel} — ${rec.date}</span>
+          <div class="hist-card-meta">
+            <span>⏱ ${mm}:${ss}</span>
+            <span>✓ ${rec.doneSets}/${rec.totalSets} séries</span>
+            <span style="color:${pct>=80?'var(--emerald)':pct>=50?'var(--amber)':'var(--red)'}">📊 ${pct}%</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="hist-delete-btn" onclick="event.stopPropagation();deleteRecord(${rec.id})">🗑</button>
+          <span class="hist-arrow">▼</span>
+        </div>
+      </div>
+      <div class="hist-detail">
+        <div class="prog-bar-wrap" style="margin:0 0 14px;height:3px">
+          <div class="prog-bar-fill" style="width:${pct}%"></div>
+        </div>
+        ${globalNoteHTML}${rattrapagesHTML}${detailHTML}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function toggleHistCard(idx) { document.getElementById(`hcard-${idx}`).classList.toggle('open'); }
+
+function markRattrapageDone(recId, muscle) {
+  const hist = loadHistory();
+  const rec = hist.find(r => r.id === recId);
+  if (!rec || !rec.rattrapages || !rec.rattrapages[muscle]) return;
+  rec.rattrapages[muscle].done = true;
+  saveHistory(hist);
+  renderHistorique();
+  checkRattrapageReminder();
+}
+
+function deleteRecord(id) {
+  if (!confirm('Supprimer cette séance ?')) return;
+  saveHistory(loadHistory().filter(r=>r.id!==id));
+  renderHistorique();
+}
+
+function clearHistory() {
+  if (!confirm('Effacer tout l\'historique ?')) return;
+  localStorage.removeItem('lucas_history');
+  renderHistorique();
+}
+
+// ══════════════════════ RAPPEL RATTRAPAGES ══════════════════════
+function checkRattrapageReminder() {
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const todayName = SEMAINE[todayIdx];
+  const hist = loadHistory();
+  const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+  const pending = [];
+  hist.forEach(rec => {
+    if (rec.id < cutoff) return;
+    if (!rec.rattrapages) return;
+    Object.entries(rec.rattrapages).forEach(([muscle, info]) => {
+      if (info.scheduledDay === todayName && !info.done) {
+        pending.push({ muscle, recId: rec.id, dayLabel: rec.dayLabel });
+      }
+    });
+  });
+
+  const container = document.getElementById('rattrapage-reminder');
+  if (!pending.length) { container.style.display = 'none'; return; }
+
+  const items = pending.map(p =>
+    `<div>• <strong>${p.muscle}</strong> <span style="color:var(--muted2)">(${p.dayLabel})</span></div>`
+  ).join('');
+
+  container.innerHTML = `<div class="rattrapage-reminder">
+    <div class="rattrapage-reminder-icon">⚡</div>
+    <div class="rattrapage-reminder-body">
+      <div class="rattrapage-reminder-title">Rattrapages prévus aujourd'hui (${todayName})</div>
+      <div class="rattrapage-reminder-list">${items}</div>
+    </div>
+    <button class="rattrapage-reminder-close" onclick="document.getElementById('rattrapage-reminder').style.display='none'">✕</button>
+  </div>`;
+  container.style.display = '';
+}
+
+// ══════════════════════ DÉLOAD ══════════════════════
+function toggleDeload(enabled) {
+  isDeload = enabled;
+  const lbl = document.getElementById('deload-label-text');
+  if (lbl) lbl.textContent = enabled ? 'Activé 🔆' : 'Désactivé';
+  localStorage.setItem('thomas_deload', enabled ? '1' : '0');
+  generateNewPlan();
+}
+
+// ══════════════════════ JOURS D'ENTRAÎNEMENT ══════════════════════
+const SEMAINE = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+let trainingDays = new Set();
+
+function renderTrainingDaysGrid() {
+  const grid = document.getElementById('training-days-grid');
+  const hint = document.getElementById('training-days-hint');
+  if (!grid) return;
+  grid.innerHTML = SEMAINE.map(day => `
+    <div class="training-day-chip ${trainingDays.has(day)?'active':''}" onclick="toggleTrainingDay('${day}')">
+      ${day.slice(0,3)}
+      <span class="chip-label">${day.slice(3)}</span>
+    </div>`).join('');
+  hint.textContent = trainingDays.size
+    ? `Jours actifs : ${[...trainingDays].join(', ')}`
+    : 'Sélectionne tes jours habituels pour optimiser les rattrapages.';
+}
+
+function toggleTrainingDay(day) {
+  if (trainingDays.has(day)) trainingDays.delete(day);
+  else trainingDays.add(day);
+  localStorage.setItem('thomas_training_days', JSON.stringify([...trainingDays]));
+  renderTrainingDaysGrid();
+}
+
+function loadTrainingDays() {
+  try { trainingDays = new Set(JSON.parse(localStorage.getItem('thomas_training_days') || '[]')); }
+  catch { trainingDays = new Set(); }
+}
+
+function getAvailableRattrapageDays() {
+  if (!trainingDays.size) return SEMAINE;
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const todayName = SEMAINE[todayIdx];
+  return [...trainingDays].filter(d => d !== todayName);
+}
+
+// ══════════════════════ ALERTES RÉCUPÉRATION ══════════════════════
+const MUSCLE_GROUPS = {
+  Pectoraux:  ['Pectoraux','Triceps','Epaules'],
+  Triceps:    ['Triceps','Pectoraux','Epaules'],
+  Epaules:    ['Epaules','Pectoraux','Triceps'],
+  Dorsaux:    ['Dorsaux','Biceps'],
+  Biceps:     ['Biceps','Dorsaux'],
+  Quadriceps: ['Quadriceps','Fessiers','Ischios'],
+  Fessiers:   ['Fessiers','Quadriceps','Ischios'],
+  Ischios:    ['Ischios','Fessiers','Quadriceps'],
+  Adducteurs: ['Adducteurs','Quadriceps'],
+  Mollets:    ['Mollets'],
+  Abs:        ['Abs'],
+};
+const RECOVERY_HOURS = 48;
+
+function checkRecoveryAlerts(dayData) {
+  const hist = loadHistory();
+  const now = Date.now();
+  const alerts = [];
+  Object.keys(dayData).forEach(muscle => {
+    const related = MUSCLE_GROUPS[muscle] || [muscle];
+    let earliest = null;
+    hist.forEach(rec => {
+      if (!rec.dayData) return;
+      const hoursAgo = (now - rec.id) / 3600000;
+      if (hoursAgo > RECOVERY_HOURS) return;
+      const workedMuscles = Object.keys(rec.dayData);
+      const overlap = workedMuscles.filter(m => related.includes(m));
+      if (overlap.length && (earliest === null || rec.id > earliest.id)) {
+        earliest = { rec, hoursAgo: Math.round(hoursAgo), overlap };
+      }
+    });
+    if (earliest) alerts.push({ muscle, hoursAgo: earliest.hoursAgo, overlap: earliest.overlap, date: earliest.rec.date });
+  });
+  return alerts;
+}
+
+function renderRecoveryAlerts(dayData) {
+  const el = document.getElementById('recovery-alerts');
+  if (!el) return;
+  const alerts = checkRecoveryAlerts(dayData);
+  if (!alerts.length) { el.innerHTML = ''; return; }
+  const items = alerts.map(a => {
+    const h = a.hoursAgo;
+    const label = h < 1 ? 'il y a moins d\'1h' : `il y a ${h}h`;
+    const muscles = a.overlap.join(', ');
+    return `<div>• <span>${a.muscle}</span> — travaillé (${muscles}) ${label}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="recovery-alert">
+    <div class="recovery-alert-icon">⚠️</div>
+    <div class="recovery-alert-body">
+      <div class="recovery-alert-title">Récupération insuffisante (< 48h)</div>
+      <div class="recovery-alert-list">${items}</div>
+    </div>
+  </div>`;
+}
+
+function renderDaysConfig() {
+  const grid = document.getElementById('days-config-grid');
+  const hint = document.getElementById('days-config-hint');
+  if (!grid) return;
+  const total = DAYS.length;
+  const active = activeDaysCount || total;
+  grid.innerHTML = Array.from({length: total}, (_, i) => {
+    const n = i + 1;
+    return `<div class="days-chip ${n === active ? 'active' : ''}" onclick="setActiveDays(${n})">${n} jour${n > 1 ? 's' : ''}</div>`;
+  }).join('');
+  const selectedDays = DAYS.slice(0, active);
+  hint.textContent = `Séances sélectionnées : ${selectedDays.map(d => d.label).join(', ')}`;
+}
+
+function setActiveDays(n) {
+  activeDaysCount = n === DAYS.length ? null : n;
+  localStorage.setItem('thomas_active_days', n);
+  renderDaysConfig();
+  renderDaySelect();
+  generateNewPlan();
+}
+
+// ══════════════════════ EXPORT / IMPORT ══════════════════════
+function exportData() {
+  const data = {
+    version: 1, exportDate: new Date().toISOString(),
+    priorities: JSON.parse(localStorage.getItem('thomas_priorities') || '{}'),
+    exercises: JSON.parse(localStorage.getItem('thomas_exercises') || 'null'),
+    trainingType: localStorage.getItem('thomas_training_type') || 'FullBody',
+    activeDays: localStorage.getItem('thomas_active_days') || null,
+    trainingDays: localStorage.getItem('thomas_training_days') || '[]',
+    deload: localStorage.getItem('thomas_deload') || '0',
+    history: JSON.parse(localStorage.getItem('lucas_history') || '[]'),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const d = new Date();
+  a.download = `thomas-training-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotification('✓ Données exportées avec succès !', 'success');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.version) throw new Error('Format invalide');
+      if (!confirm('⚠️ Cette action va remplacer toutes tes données actuelles. Continuer ?')) {
+        event.target.value = ''; return;
+      }
+      if (data.priorities) localStorage.setItem('thomas_priorities', JSON.stringify(data.priorities));
+      if (data.exercises)  localStorage.setItem('thomas_exercises',  JSON.stringify(data.exercises));
+      if (data.trainingType) localStorage.setItem('thomas_training_type', data.trainingType);
+      if (data.activeDays)   localStorage.setItem('thomas_active_days',   data.activeDays);
+      if (data.trainingDays) localStorage.setItem('thomas_training_days', data.trainingDays);
+      if (data.deload)       localStorage.setItem('thomas_deload',         data.deload);
+      if (data.history)      localStorage.setItem('lucas_history',         JSON.stringify(data.history));
+      const ok = document.getElementById('import-success');
+      ok.style.display = 'flex';
+      setTimeout(() => ok.style.display = 'none', 4000);
+      showNotification('✓ Données importées ! Rechargement...', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } catch (err) {
+      alert('❌ Erreur lors de l\'import : ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function copyDataToClipboard() {
+  const data = {
+    version: 1, exportDate: new Date().toISOString(),
+    priorities: JSON.parse(localStorage.getItem('thomas_priorities') || '{}'),
+    exercises: JSON.parse(localStorage.getItem('thomas_exercises') || 'null'),
+    trainingType: localStorage.getItem('thomas_training_type') || 'FullBody',
+    activeDays: localStorage.getItem('thomas_active_days') || null,
+    trainingDays: localStorage.getItem('thomas_training_days') || '[]',
+    deload: localStorage.getItem('thomas_deload') || '0',
+    history: JSON.parse(localStorage.getItem('lucas_history') || '[]'),
+  };
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+    .then(() => showNotification('✓ Données copiées dans le presse-papiers !', 'success'))
+    .catch(() => showNotification('❌ Impossible de copier', 'error'));
+}
+
+function updateDataStats() {
+  const hist = loadHistory();
+  const exercises = JSON.parse(localStorage.getItem('thomas_exercises') || 'null');
+  let totalExercises = 0;
+  if (exercises) Object.values(exercises).forEach(arr => { totalExercises += arr.length; });
+  let totalSize = 0;
+  for (let key in localStorage) {
+    if (localStorage.hasOwnProperty(key) && (key.startsWith('thomas_') || key.startsWith('lucas_')))
+      totalSize += localStorage[key].length + key.length;
+  }
+  const sizeKB = (totalSize / 1024).toFixed(1);
+  const statsEl = document.getElementById('data-stats');
+  if (statsEl) {
+    statsEl.innerHTML = `
+      • <strong>${hist.length}</strong> séance${hist.length > 1 ? 's' : ''} enregistrée${hist.length > 1 ? 's' : ''}<br/>
+      • <strong>${totalExercises}</strong> exercice${totalExercises > 1 ? 's' : ''} dans la banque<br/>
+      • <strong>${MUSCLES.length}</strong> groupes musculaires configurés<br/>
+      • Taille totale : <strong>${sizeKB} KB</strong>
+    `;
+  }
+}
+
+// ══════════════════════ NOTIFICATIONS ══════════════════════
+function showNotification(message, type = 'info') {
+  let notif = document.getElementById('global-notification');
+  if (!notif) {
+    notif = document.createElement('div');
+    notif.id = 'global-notification';
+    document.body.appendChild(notif);
+  }
+  const styles = {
+    success: 'background:rgba(5,150,105,0.15);border:1px solid rgba(5,150,105,0.3);color:var(--emerald)',
+    error:   'background:rgba(240,112,112,0.12);border:1px solid rgba(240,112,112,0.25);color:var(--red)',
+    info:    'background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.20);color:var(--violet)',
+  };
+  notif.style.cssText = `
+    position:fixed;top:20px;right:20px;z-index:10000;
+    padding:12px 18px;border-radius:10px;font-size:0.84rem;font-weight:600;
+    box-shadow:0 8px 32px rgba(0,0,0,0.12);backdrop-filter:blur(12px);
+    font-family:var(--font-body);
+    animation:slideInRight 0.3s ease;
+    ${styles[type] || styles.info}
+  `;
+  notif.textContent = message;
+
+  if (!document.getElementById('notif-styles')) {
+    const s = document.createElement('style');
+    s.id = 'notif-styles';
+    s.textContent = `
+      @keyframes slideInRight { from { transform:translateX(120%);opacity:0; } to { transform:translateX(0);opacity:1; } }
+      @keyframes slideOutRight { from { transform:translateX(0);opacity:1; } to { transform:translateX(120%);opacity:0; } }
+    `;
+    document.head.appendChild(s);
+  }
+
+  clearTimeout(notif._timeout);
+  notif._timeout = setTimeout(() => {
+    notif.style.animation = 'slideOutRight 0.3s ease forwards';
+    setTimeout(() => { if (notif.parentNode) notif.parentNode.removeChild(notif); }, 300);
+  }, 3000);
+}
+
+// ══════════════════════ GRAPHIQUES ══════════════════════
+let muscleChartInstance = null;
+let exoChartInstance    = null;
+let muscleWeeksPeriod   = 8;
+let exoWeeksPeriod      = 8;
+
+const CHART_DEFAULTS = {
+  plugins: { legend: { display: false }, tooltip: {
+    backgroundColor: '#ffffff', borderColor: 'rgba(139,92,246,0.20)', borderWidth: 1,
+    titleColor: '#18181b', bodyColor: '#52525b', padding: 12,
+    callbacks: {}
+  }},
+  scales: {
+    x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#71717a', font: { size: 11 } } },
+    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#71717a', font: { size: 11 } }, beginAtZero: true }
+  },
+  animation: { duration: 500 },
+  responsive: true, maintainAspectRatio: false,
+};
+
+function getISOWeek(ts) {
+  const d = new Date(ts);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 4 - (d.getDay()||7));
+  const yearStart = new Date(d.getFullYear(),0,1);
+  const week = Math.ceil((((d-yearStart)/86400000)+1)/7);
+  return `${d.getFullYear()}-S${String(week).padStart(2,'0')}`;
+}
+function weekLabel(isoWeek) { return isoWeek.replace(/^\d{4}-S0?/, 'S'); }
+
+function buildMuscleVolumeData(muscleName, weeks) {
+  const hist = loadHistory();
+  const weekMap = {};
+  hist.forEach(rec => {
+    if (!rec.dayData || !rec.setData) return;
+    const ts = rec.id;
+    if (weeks) { const cutoff = Date.now() - weeks * 7 * 24 * 3600 * 1000; if (ts < cutoff) return; }
+    const wk = getISOWeek(ts);
+    Object.entries(rec.dayData).forEach(([muscle, exos]) => {
+      if (muscle !== muscleName) return;
+      exos.forEach((exo, ei) => {
+        const key = `${muscle}__${ei}`;
+        const sets = (rec.setData[key] || []).filter(s => s.done);
+        if (!weekMap[wk]) weekMap[wk] = 0;
+        weekMap[wk] += sets.length;
+      });
+    });
+  });
+  const sorted = Object.keys(weekMap).sort();
+  return { labels: sorted.map(weekLabel), values: sorted.map(k => weekMap[k]) };
+}
+
+function renderMuscleChart() {
+  const muscleName = document.getElementById('muscle-chart-select').value;
+  if (!muscleName) return;
+  const { labels, values } = buildMuscleVolumeData(muscleName, muscleWeeksPeriod);
+  const statsEl = document.getElementById('muscle-chart-stats');
+  if (!labels.length) {
+    statsEl.innerHTML = '';
+    if (muscleChartInstance) { muscleChartInstance.destroy(); muscleChartInstance = null; }
+    const id = 'muscle-chart-empty';
+    if (!document.getElementById(id))
+      document.getElementById('muscle-chart').insertAdjacentHTML('beforebegin',
+        `<div class="chart-empty" id="${id}"><div class="chart-empty-icon">📉</div>Aucune séance enregistrée pour ce muscle sur cette période.</div>`);
+    document.getElementById('muscle-chart').style.display = 'none';
+    return;
+  }
+  const emptyEl = document.getElementById('muscle-chart-empty');
+  if (emptyEl) emptyEl.remove();
+  document.getElementById('muscle-chart').style.display = '';
+  const avg = Math.round(values.reduce((a,b)=>a+b,0)/values.length);
+  const maxV = Math.max(...values);
+  const trend = values.length >= 2 ? (values[values.length-1] - values[0]) : 0;
+  statsEl.innerHTML = `
+    <div class="chart-stat"><div class="chart-stat-val">${avg}</div><div class="chart-stat-lbl">Séries moy./sem.</div></div>
+    <div class="chart-stat"><div class="chart-stat-val">${maxV}</div><div class="chart-stat-lbl">Meilleure semaine</div></div>
+    <div class="chart-stat"><div class="chart-stat-val" style="color:${trend>=0?'var(--emerald)':'var(--red)'}">${trend>=0?'+':''}${trend}</div><div class="chart-stat-lbl">Tendance</div></div>`;
+  const ctx = document.getElementById('muscle-chart').getContext('2d');
+  if (muscleChartInstance) muscleChartInstance.destroy();
+  muscleChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{
+      data: values,
+      backgroundColor: 'rgba(139,92,246,0.25)',
+      borderColor: '#8b5cf6', borderWidth: 2,
+      borderRadius: 6, hoverBackgroundColor: 'rgba(167,139,250,0.6)',
+    }]},
+    options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+      callbacks: { label: ctx => ` ${ctx.raw} séries` }}},
+      scales: { ...CHART_DEFAULTS.scales, y: { ...CHART_DEFAULTS.scales.y, ticks: { ...CHART_DEFAULTS.scales.y.ticks,
+        callback: v => `${v} sér.` }}}}
+  });
+}
+
+function setMusclePeriod(weeks) {
+  muscleWeeksPeriod = weeks;
+  document.querySelectorAll('#muscle-period-chips .period-chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.weeks) === weeks);
+  });
+  renderMuscleChart();
+}
+
+function getAllExerciseNames() {
+  const names = new Set();
+  loadHistory().forEach(rec => {
+    if (!rec.dayData) return;
+    Object.entries(rec.dayData).forEach(([, exos]) => { exos.forEach(exo => names.add(exo.name)); });
+  });
+  return [...names].sort();
+}
+
+function buildExoWeightData(exoName, weeks) {
+  const hist = loadHistory();
+  const weekMap = {};
+  hist.forEach(rec => {
+    if (!rec.dayData || !rec.setData) return;
+    const ts = rec.id;
+    if (weeks) { const cutoff = Date.now() - weeks * 7 * 24 * 3600 * 1000; if (ts < cutoff) return; }
+    const wk = getISOWeek(ts);
+    Object.entries(rec.dayData).forEach(([muscle, exos]) => {
+      exos.forEach((exo, ei) => {
+        if (exo.name !== exoName) return;
+        const key = `${muscle}__${ei}`;
+        const sets = (rec.setData[key] || []).filter(s => s.done && s.weight);
+        const maxW = sets.length ? Math.max(...sets.map(s => parseFloat(s.weight)||0)) : null;
+        if (maxW !== null) { if (!weekMap[wk] || maxW > weekMap[wk]) weekMap[wk] = maxW; }
+      });
+    });
+  });
+  const sorted = Object.keys(weekMap).sort();
+  return { labels: sorted.map(weekLabel), values: sorted.map(k => weekMap[k]) };
+}
+
+function renderExoChart() {
+  const exoName = document.getElementById('exo-chart-select').value;
+  if (!exoName) return;
+  const { labels, values } = buildExoWeightData(exoName, exoWeeksPeriod);
+  const statsEl = document.getElementById('exo-chart-stats');
+  if (!labels.length || values.every(v => !v)) {
+    statsEl.innerHTML = '';
+    if (exoChartInstance) { exoChartInstance.destroy(); exoChartInstance = null; }
+    const id = 'exo-chart-empty';
+    if (!document.getElementById(id))
+      document.getElementById('exo-chart').insertAdjacentHTML('beforebegin',
+        `<div class="chart-empty" id="${id}"><div class="chart-empty-icon">🏋️</div>Aucune donnée de poids pour cet exercice.</div>`);
+    document.getElementById('exo-chart').style.display = 'none';
+    return;
+  }
+  const emptyEl = document.getElementById('exo-chart-empty');
+  if (emptyEl) emptyEl.remove();
+  document.getElementById('exo-chart').style.display = '';
+  const maxW = Math.max(...values);
+  const lastW = values[values.length-1];
+  const prog = lastW - values[0];
+  const avgW = Math.round(values.reduce((a,b)=>a+b,0)/values.length*10)/10;
+  statsEl.innerHTML = `
+    <div class="chart-stat"><div class="chart-stat-val">${lastW} kg</div><div class="chart-stat-lbl">Dernier poids</div></div>
+    <div class="chart-stat"><div class="chart-stat-val" style="color:var(--amber)">${maxW} kg</div><div class="chart-stat-lbl">Record (PR)</div></div>
+    <div class="chart-stat"><div class="chart-stat-val" style="color:${prog>=0?'var(--emerald)':'var(--red)'}">${prog>=0?'+':''}${prog} kg</div><div class="chart-stat-lbl">Progression</div></div>
+    <div class="chart-stat"><div class="chart-stat-val">${avgW} kg</div><div class="chart-stat-lbl">Poids moyen</div></div>`;
+  const ctx = document.getElementById('exo-chart').getContext('2d');
+  if (exoChartInstance) exoChartInstance.destroy();
+  const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+  gradient.addColorStop(0, 'rgba(139,92,246,0.18)');
+  gradient.addColorStop(1, 'rgba(139,92,246,0.01)');
+  exoChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{
+      data: values, borderColor: '#8b5cf6', borderWidth: 2.5,
+      backgroundColor: gradient, fill: true, tension: 0.38,
+      pointBackgroundColor: '#8b5cf6', pointBorderColor: '#fafafa',
+      pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7,
+    }]},
+    options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+      callbacks: { label: ctx => ` ${ctx.raw} kg` }}},
+      scales: { ...CHART_DEFAULTS.scales, y: { ...CHART_DEFAULTS.scales.y, ticks: { ...CHART_DEFAULTS.scales.y.ticks,
+        callback: v => `${v} kg` }}}}
+  });
+}
+
+function setExoPeriod(weeks) {
+  exoWeeksPeriod = weeks;
+  document.querySelectorAll('#exo-period-chips .period-chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.weeks) === weeks);
+  });
+  renderExoChart();
+}
+
+function renderGraphiques() {
+  const hist = loadHistory();
+  const muscleSet = new Set();
+  hist.forEach(rec => { if (rec.dayData) Object.keys(rec.dayData).forEach(m => muscleSet.add(m)); });
+  const muscleSel = document.getElementById('muscle-chart-select');
+  const prevMuscle = muscleSel.value;
+  muscleSel.innerHTML = muscleSet.size
+    ? [...muscleSet].sort().map(m => `<option value="${m}" ${m===prevMuscle?'selected':''}>${m}</option>`).join('')
+    : `<option value="">— Aucune donnée —</option>`;
+  const exoNames = getAllExerciseNames();
+  const exoSel = document.getElementById('exo-chart-select');
+  const prevExo = exoSel.value;
+  exoSel.innerHTML = exoNames.length
+    ? exoNames.map(n => `<option value="${n}" ${n===prevExo?'selected':''}>${n}</option>`).join('')
+    : `<option value="">— Aucune donnée —</option>`;
+  renderMuscleChart();
+  renderExoChart();
+}
+
+// ══════════════════════ HELP MODAL ══════════════════════
+function toggleHelpModal() {
+  var modal = document.getElementById('help-modal-overlay');
+  modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+}
+function closeHelpModal(event) {
+  document.getElementById('help-modal-overlay').style.display = 'none';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeHelpModal();
+});
+
+// ══════════════════════ INIT ══════════════════════
+loadSavedTrainingType();
+loadSavedGoal();
+loadSavedPriorities();
+loadSavedExercises();
+loadTrainingDays();
+renderPriorityTable();
+renderPriorityBoard();
+renderDaysConfig();
+renderTrainingDaysGrid();
+renderDaySelect();
+generateNewPlan();
+restorePlanRattrapages();
+renderSession();
+renderStats();
+updateHistBadge();
+renderHeatmap();
+checkRattrapageReminder();
+updateDataStats();
+
+/* ══════════════════════════════════════════
+   REST TIMER — INTELLIGENT AUTO-START
+══════════════════════════════════════════ */
+var rtInterval = null;
+var rtRemaining = 0;
+var rtTotal = 0;
+var rtReady = false;
+var rtAudioCtx = null;
+
+function getRestSeconds() {
+  var cfg = GOAL_CONFIG[currentGoal] || GOAL_CONFIG['Prise de Masse'];
+  return cfg.restSec || 90;
+}
+
+function rtGetCirc() { return 2 * Math.PI * 39; }
+
+function rtUpdateDisplay() {
+  var overlay = document.getElementById('rest-timer-overlay');
+  var card    = document.getElementById('rt-card');
+  var label   = document.getElementById('rt-label');
+  var count   = document.getElementById('rt-count');
+  var fill    = document.getElementById('rt-ring-fill');
+  if (!overlay) return;
+
+  var circ = rtGetCirc();
+  var pct  = rtTotal > 0 ? rtRemaining / rtTotal : 0;
+  var offset = circ * (1 - pct);
+
+  fill.style.strokeDasharray  = circ;
+  fill.style.strokeDashoffset = offset;
+
+  var mins = Math.floor(rtRemaining / 60);
+  var secs = rtRemaining % 60;
+  count.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+  if (rtReady) {
+    card.classList.add('rt-ready');
+    label.textContent = '✓ Prêt à repartir !';
+    label.className = 'rt-label rt-ready-label';
+  } else {
+    card.classList.remove('rt-ready');
+    label.textContent = 'Repos en cours';
+    label.className = 'rt-label';
+  }
+}
+
+function rtPlayBeep(freq, duration, gain) {
+  try {
+    if (!rtAudioCtx) rtAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = rtAudioCtx.createOscillator();
+    var gainNode = rtAudioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(rtAudioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, rtAudioCtx.currentTime);
+    gainNode.gain.setValueAtTime(gain || 0.18, rtAudioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, rtAudioCtx.currentTime + (duration || 0.18));
+    osc.start(rtAudioCtx.currentTime);
+    osc.stop(rtAudioCtx.currentTime + (duration || 0.18));
+  } catch(e) {}
+}
+
+function rtPlayDoneSound() {
+  // Three ascending tones — distinct but discreet
+  rtPlayBeep(523, 0.12, 0.15);
+  setTimeout(function() { rtPlayBeep(659, 0.12, 0.15); }, 140);
+  setTimeout(function() { rtPlayBeep(784, 0.22, 0.18); }, 280);
+}
+
+function restTimerStart() {
+  restTimerStop();
+  rtRemaining = getRestSeconds();
+  rtTotal     = rtRemaining;
+  rtReady     = false;
+
+  var overlay = document.getElementById('rest-timer-overlay');
+  if (overlay) overlay.classList.add('visible');
+  rtUpdateDisplay();
+
+  rtInterval = setInterval(function() {
+    if (rtRemaining <= 0) {
+      rtRemaining = 0;
+      rtReady = true;
+      rtUpdateDisplay();
+      rtPlayDoneSound();
+      clearInterval(rtInterval);
+      rtInterval = null;
+      // Auto-dismiss after 8 s if not touched
+      setTimeout(function() { if (rtReady) restTimerStop(); }, 8000);
+      return;
+    }
+    // Small tick beep at 3s warning
+    if (rtRemaining === 3) rtPlayBeep(440, 0.1, 0.10);
+    rtRemaining--;
+    rtUpdateDisplay();
+  }, 1000);
+}
+
+function restTimerStop() {
+  if (rtInterval) { clearInterval(rtInterval); rtInterval = null; }
+  rtReady = false;
+  var overlay = document.getElementById('rest-timer-overlay');
+  if (overlay) overlay.classList.remove('visible');
+}
+
+function restTimerSkip() { restTimerStop(); }
+
+function restTimerAddTime(sec) {
+  if (!document.getElementById('rest-timer-overlay').classList.contains('visible')) return;
+  // If already done, restart with the added time
+  if (rtReady) {
+    rtReady = false;
+    rtRemaining = sec;
+    rtTotal = sec;
+    rtUpdateDisplay();
+    rtInterval = setInterval(function() {
+      if (rtRemaining <= 0) {
+        rtRemaining = 0; rtReady = true;
+        rtUpdateDisplay(); rtPlayDoneSound();
+        clearInterval(rtInterval); rtInterval = null;
+        setTimeout(function() { if (rtReady) restTimerStop(); }, 8000);
+        return;
+      }
+      if (rtRemaining === 3) rtPlayBeep(440, 0.1, 0.10);
+      rtRemaining--;
+      rtUpdateDisplay();
+    }, 1000);
+  } else {
+    rtRemaining += sec;
+    rtTotal += sec;
+    rtUpdateDisplay();
+  }
+}
+
+
+</script>
+
+<!-- ═══ REST TIMER OVERLAY ═══ -->
+<div id="rest-timer-overlay">
+  <div class="rt-card" id="rt-card">
+    <div class="rt-label" id="rt-label">Repos en cours</div>
+    <div class="rt-ring">
+      <svg width="88" height="88" viewBox="0 0 88 88">
+        <circle class="rt-ring-bg" cx="44" cy="44" r="39"/>
+        <circle class="rt-ring-fill" id="rt-ring-fill" cx="44" cy="44" r="39"/>
+      </svg>
+      <div class="rt-count" id="rt-count">0:00</div>
+    </div>
+    <div class="rt-actions">
+      <button class="rt-btn rt-skip" onclick="restTimerSkip()">Passer ✕</button>
+      <button class="rt-btn" onclick="restTimerAddTime(30)">+30 s</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
